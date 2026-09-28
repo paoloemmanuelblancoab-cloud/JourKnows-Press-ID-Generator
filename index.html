@@ -4,536 +4,253 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JourKnows PH — Press ID Generator</title>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
-
 <style>
-:root{
-  --navy:#000E4B;
-  --blue:#00198D;
-  --mid:#071D72;
-  --light:#DCEBFF;
-  --pale:#F4F8FF;
-  --ink:#101828;
-  --muted:#667085;
-  --border:#D7E1EF;
-  --white:#fff;
-  --card-w:638px;
-  --card-h:1012px;
-}
+:root{--navy:#000E4B;--blue:#00198D;--light:#DCEBFF;--ink:#101828;--muted:#667085;--border:#D7E1EF}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,Arial,Helvetica,sans-serif;
-  color:var(--ink);
-  background:#eef4fc;
-}
+body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;color:var(--ink);background:#eef4fc}
 button,input,select{font:inherit}
-.app-header{
-  background:var(--navy);
-  color:#fff;
-  padding:18px 26px;
-  position:sticky;
-  top:0;
-  z-index:20;
-  box-shadow:0 5px 24px rgba(0,14,75,.18);
-}
-.header-inner{
-  max-width:1450px;
-  margin:auto;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:20px;
-}
+.app-header{background:var(--navy);color:#fff;padding:18px 26px;position:sticky;top:0;z-index:20;box-shadow:0 5px 24px rgba(0,14,75,.18)}
+.header-inner{max-width:1450px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px}
 .brand{display:flex;align-items:center;gap:12px}
-.brand-mark{
-  width:44px;height:44px;border-radius:10px;background:#fff;color:var(--navy);
-  display:grid;place-items:center;font-weight:950
-}
+.brand-mark{width:44px;height:44px;border-radius:10px;background:#fff;color:var(--navy);display:grid;place-items:center;font-weight:950}
 .brand h1{font-size:19px;margin:0;font-weight:950;letter-spacing:.5px}
 .brand p{font-size:11px;margin:3px 0 0;opacity:.72}
 .status{font-size:12px;opacity:.8}
 .container{max-width:1450px;margin:28px auto 60px;padding:0 20px}
 .workspace{display:grid;grid-template-columns:410px 1fr;gap:28px;align-items:start}
-.panel{
-  background:#fff;border:1px solid var(--border);border-radius:18px;
-  box-shadow:0 12px 35px rgba(15,23,42,.07)
-}
+.panel{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 12px 35px rgba(15,23,42,.07)}
 .editor{padding:24px;position:sticky;top:88px}
 h2{color:var(--navy);margin:0 0 6px;font-size:21px}
 .subtitle{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 22px}
 .field{margin:0 0 16px}
-label{
-  display:block;font-size:12px;font-weight:850;color:#344054;margin-bottom:7px
-}
-input,select{
-  width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;
-  outline:none;background:#fff;color:var(--ink)
-}
-input:focus,select:focus{
-  border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,25,141,.08)
-}
+label{display:block;font-size:12px;font-weight:850;color:#344054;margin-bottom:7px}
+input,select{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;outline:none;background:#fff;color:var(--ink)}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,25,141,.08)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .id-row{display:grid;grid-template-columns:1fr auto;gap:8px}
-.btn{
-  border:0;border-radius:9px;padding:11px 13px;font-size:12px;font-weight:850;
-  transition:.15s
-}
+.btn{border:0;border-radius:9px;padding:11px 13px;font-size:12px;font-weight:850;transition:.15s;cursor:pointer}
 .btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.6;cursor:wait}
 .primary{background:var(--blue);color:#fff}
 .dark{background:var(--navy);color:#fff}
 .secondary{background:#e9f0fa;color:var(--navy)}
 .danger{background:#fee4e2;color:#b42318}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:21px}
 .full{grid-column:1/-1}
-.upload{
-  border:2px dashed #b8cae2;border-radius:11px;padding:15px;
-  background:#f8fbff;text-align:center
-}
+.upload{border:2px dashed #b8cae2;border-radius:11px;padding:15px;background:#f8fbff;text-align:center}
 .upload small{display:block;color:var(--muted);font-size:10px;line-height:1.4;margin-top:7px}
 .photo-controls{display:none;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px}
 .photo-controls button{padding:8px 3px;font-size:11px}
-.notice{
-  margin-top:17px;padding:12px;border-radius:9px;background:#f3f7fd;
-  color:#475467;border:1px solid #dbe6f3;font-size:10.5px;line-height:1.5
-}
+.notice{margin-top:17px;padding:12px;border-radius:9px;background:#f3f7fd;color:#475467;border:1px solid #dbe6f3;font-size:10.5px;line-height:1.5}
 .preview-panel{padding:24px;overflow:hidden}
-.preview-head{
-  display:flex;justify-content:space-between;align-items:center;margin-bottom:22px
-}
+.preview-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
 .preview-head h2{margin:0}
 .preview-head span{font-size:11px;color:var(--muted)}
 .cards{display:flex;gap:28px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
 .card-wrap{width:min(100%,319px)}
-.card-label{
-  text-align:center;font-size:10px;font-weight:900;color:var(--muted);
-  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:9px
-}
+.card-label{text-align:center;font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:9px}
 
-/* PORTRAIT ID */
-.id-card{
-  width:100%;
-  aspect-ratio:53.98 / 85.6;
-  position:relative;
-  overflow:hidden;
-  border-radius:11px;
-  box-shadow:0 16px 38px rgba(0,14,75,.18);
-  background:#fff;
-  font-family:'Poppins',Arial,Helvetica,sans-serif;
-  font-weight:700;
-}
-.front{
-  background:
-    linear-gradient(rgba(255,255,255,.88),rgba(255,255,255,.94)),
-    repeating-linear-gradient(125deg,transparent 0 70px,rgba(0,25,141,.035) 71px 73px);
-}
-.front:before{
-  content:"";position:absolute;left:-15%;right:-15%;top:14%;height:31%;
-  background:var(--light);transform:rotate(-4deg);border-radius:50%;z-index:0
-}
-.front-top{
-  position:absolute;left:0;right:0;top:0;height:22%;
-  background:var(--navy);color:#fff;z-index:2;overflow:hidden
-}
-.front-top:after{
-  content:"";position:absolute;width:130%;height:90px;left:-15%;bottom:-52px;
-  background:var(--blue);border-radius:50%
-}
-.branding{
-  position:absolute;top:14%;left:8%;right:8%;display:flex;align-items:center;
-  justify-content:center;z-index:3
-}
-.branding-logo{
-  display:block;
-  width:170px;
-  max-width:82%;
-  height:auto;
-  object-fit:contain;
-}
-.logo{
-  width:48px;height:48px;border-radius:9px;background:#fff;color:var(--navy);
-  display:grid;place-items:center;font-size:16px;font-weight:950;flex:none
-}
-.branding h3{margin:0;font-size:17px;letter-spacing:1px;font-weight:950}
-.branding p{margin:3px 0 0;font-size:8px;letter-spacing:1.3px;opacity:.8}
-.press-title{
-  position:absolute;left:0;right:0;top:19%;z-index:3;text-align:center;
-  font-size:8px;font-weight:900;letter-spacing:1.3px;opacity:.86
-}
-.photo-area{
-  position:absolute;z-index:4;top:18.5%;left:50%;transform:translateX(-50%);
-  width:52%;aspect-ratio:1/1;border-radius:50%;overflow:hidden
-}
-.photo{
-  width:100%;height:100%;object-fit:cover;object-position:50% 50%;
-  border:7px solid #fff;border-radius:50%;box-shadow:0 9px 25px rgba(0,14,75,.16);
-  background:#e7edf6;display:block
-}
-.placeholder{
-  position:absolute;inset:7px;background:#e7edf6;border-radius:50%;
-  display:grid;place-items:center;
-  color:#8a99ad;font-size:11px;font-weight:900;text-align:center
-}
-.info{
-  position:absolute;z-index:5;left:8%;right:8%;top:51%;text-align:center
-}
-.name{
-  color:#111827;font-size:clamp(18px,4.8vw,28px);line-height:1;
-  font-weight:950;text-transform:uppercase;letter-spacing:-.5px
-}
-.role{
-  color:var(--blue);font-size:10px;font-weight:900;margin-top:7px;
-  text-transform:uppercase;letter-spacing:.7px
-}
-.desk{
-  color:#667085;font-size:8px;font-weight:800;margin-top:5px;
-  text-transform:uppercase;letter-spacing:1px
-}
-.detail small{
-  display:block;color:#667085;font-size:7px;text-transform:uppercase;
-  letter-spacing:1px;font-weight:900;margin-bottom:3px
-}
-.detail strong{
-  display:block;color:var(--navy);font-size:9px;line-height:1.15;
-  word-break:break-word
-}
-.press-stamp{
-  position:absolute;z-index:5;left:0;right:0;bottom:10%;text-align:center
-}
-.press-word{
-  display:inline-block;color:var(--navy);font-size:clamp(34px,10vw,56px);
-  font-family:'Poppins',Arial,Helvetica,sans-serif;font-weight:900;
-  letter-spacing:9px;margin-right:-9px;line-height:1
-}
-.press-sub{
-  color:var(--blue);font-size:9px;font-family:'Poppins',Arial,Helvetica,sans-serif;
-  font-weight:900;letter-spacing:2.5px;text-transform:uppercase;margin-top:6px
-}
-.detail-box-back{
-  position:absolute;z-index:5;left:8%;right:8%;top:29%;height:17%;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
-  border-radius:11px;padding:10px 12px;
-  display:grid;grid-template-columns:1fr 1fr;gap:8px 10px
-}
+/* CARD (export-safe: no transforms on clipped boxes, no clip-path, no vw units) */
+.id-card{width:100%;aspect-ratio:53.98/85.6;position:relative;overflow:hidden;border-radius:11px;box-shadow:0 16px 38px rgba(0,14,75,.18);background:#fff;font-family:'Poppins',Arial,Helvetica,sans-serif;font-weight:700}
+.front{background:linear-gradient(rgba(255,255,255,.88),rgba(255,255,255,.94)),repeating-linear-gradient(125deg,transparent 0 70px,rgba(0,25,141,.035) 71px 73px)}
+.front:before{content:"";position:absolute;left:-15%;right:-15%;top:14%;height:31%;background:var(--light);transform:rotate(-4deg);border-radius:50%;z-index:0}
+.front-top{position:absolute;left:0;right:0;top:0;height:22%;background:var(--navy);color:#fff;z-index:2;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding-top:12px;gap:6px}
+.front-top:after{content:"";position:absolute;width:130%;height:90px;left:-15%;bottom:-52px;background:var(--blue);border-radius:50%}
+.branding{position:relative;z-index:3;width:100%;display:flex;justify-content:center}
+.branding-logo{display:block;width:160px;height:auto}
+.press-title{position:relative;z-index:3;text-align:center;white-space:nowrap;font-size:8px;font-weight:900;letter-spacing:1.3px;opacity:.86}
+.photo-area{position:absolute;z-index:4;top:18.5%;left:24%;width:52%;aspect-ratio:1/1;border-radius:50%;overflow:hidden}
+.photo{width:100%;height:100%;object-fit:cover;object-position:50% 50%;border:7px solid #fff;border-radius:50%;box-shadow:0 9px 25px rgba(0,14,75,.16);background:#e7edf6;display:block}
+.placeholder{position:absolute;inset:7px;background:#e7edf6;border-radius:50%;display:grid;place-items:center;color:#8a99ad;font-size:11px;font-weight:900;text-align:center}
+.info{position:absolute;z-index:5;left:8%;right:8%;top:51%;text-align:center}
+.name{color:#111827;font-size:28px;white-space:nowrap;line-height:1;font-weight:900;text-transform:uppercase;letter-spacing:-.5px}
+.role{color:var(--blue);font-size:10px;font-weight:900;margin-top:7px;text-transform:uppercase;letter-spacing:.7px}
+.desk{color:#667085;font-size:8px;font-weight:800;margin-top:5px;text-transform:uppercase;letter-spacing:1px}
+.detail small{display:block;color:#667085;font-size:7px;text-transform:uppercase;letter-spacing:1px;font-weight:900;margin-bottom:3px}
+.detail strong{display:block;color:var(--navy);font-size:9px;line-height:1.15;word-break:break-word}
+.press-stamp{position:absolute;z-index:5;left:0;right:0;bottom:10%;text-align:center}
+.press-word{display:inline-block;color:var(--navy);font-size:56px;font-weight:900;letter-spacing:9px;margin-right:-9px;line-height:1}
+.press-sub{color:var(--blue);font-size:9px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;margin-top:6px}
+.detail-box-back{position:absolute;z-index:5;left:8%;right:8%;top:29%;height:17%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:11px;padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
 .detail-box-back .detail small{color:rgba(255,255,255,.55)}
 .detail-box-back .detail strong{color:#fff}
-#idPreview{
-  font-family:'Poppins',Arial,Helvetica,sans-serif;font-weight:900
-}
-.front-footer{
-  position:absolute;left:0;right:0;bottom:0;height:5.5%;
-  background:var(--navy);color:#fff;display:flex;align-items:center;
-  justify-content:center;font-size:7px;font-weight:900;letter-spacing:1.2px;z-index:6
-}
-
-/* BACK */
-.back{
-  background:
-    radial-gradient(circle at 100% 0,rgba(255,255,255,.09),transparent 30%),
-    var(--navy);color:#fff
-}
-.back-top{
-  position:absolute;top:0;left:0;right:0;height:25%;background:var(--blue);
-  clip-path:ellipse(78% 78% at 50% 0)
-}
-.back-brand{
-  position:absolute;top:7%;left:8%;right:8%;z-index:2;text-align:center
-}
-.back-brand-logo{
-  display:block;
-  width:170px;
-  max-width:82%;
-  height:auto;
-  margin:0 auto;
-  object-fit:contain;
-}
-.back-content{
-  position:absolute;left:8%;right:8%;top:49%;bottom:9%;
-  display:flex;flex-direction:column;align-items:center;text-align:center;
-  justify-content:center
-}
-.qr{
-  width:36%;aspect-ratio:1;background:#fff;padding:7px;display:grid;place-items:center;
-  margin-bottom:14px
-}
+#idPreview{font-weight:900}
+.front-footer{position:absolute;left:0;right:0;bottom:0;height:5.5%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;letter-spacing:1.2px;z-index:6}
+.back{background:radial-gradient(circle at 100% 0,rgba(255,255,255,.09),transparent 30%),var(--navy);color:#fff}
+.back-top{position:absolute;top:0;left:-28%;width:156%;height:19.5%;background:var(--blue);border-radius:0 0 50% 50% / 0 0 100% 100%}
+.back-brand{position:absolute;top:7%;left:8%;right:8%;z-index:2;text-align:center}
+.back-brand-logo{display:block;width:160px;height:auto;margin:0 auto}
+.back-content{position:absolute;left:8%;right:8%;top:49%;bottom:9%;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center}
+.qr{width:36%;aspect-ratio:1;background:#fff;padding:7px;display:grid;place-items:center;margin-bottom:14px}
 .qr img,.qr canvas{width:100%!important;height:100%!important}
-.verify-title{
-  font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:1px
-}
-.verify-copy{
-  color:rgba(255,255,255,.76);font-size:8px;line-height:1.55;
-  margin:8px 0 15px;max-width:90%
-}
+.verify-title{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:1px}
+.verify-copy{color:rgba(255,255,255,.76);font-size:8px;line-height:1.55;margin:8px 0 15px;max-width:90%}
 .url{font-size:7px;color:rgba(255,255,255,.58);word-break:break-all}
-.verify-code{
-  font-size:8px;color:rgba(255,255,255,.85);letter-spacing:2.5px;
-  margin-top:7px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-weight:900
-}
+.verify-code{font-size:8px;color:rgba(255,255,255,.85);letter-spacing:2.5px;margin-top:7px;font-weight:900}
 .back-rule{width:55px;height:3px;background:#fff;border-radius:99px;margin:4px 0 8px;opacity:.85}
-.back-disclaimer{
-  position:absolute;left:9%;right:9%;bottom:5%;text-align:center;
-  color:rgba(255,255,255,.48);font-size:6.5px;line-height:1.4
-}
-@media(max-width:1100px){
-  .workspace{grid-template-columns:1fr}
-  .editor{position:relative;top:auto}
-}
-@media(max-width:600px){
-  .container{padding:0 10px;margin-top:15px}
-  .editor,.preview-panel{padding:16px;border-radius:13px}
-  .status{display:none}
-  .two,.actions{grid-template-columns:1fr}
-  .full{grid-column:auto}
-}
+.back-disclaimer{position:absolute;left:9%;right:9%;bottom:5%;text-align:center;color:rgba(255,255,255,.48);font-size:6.5px;line-height:1.4}
+@media(max-width:1100px){.workspace{grid-template-columns:1fr}.editor{position:relative;top:auto}}
+@media(max-width:600px){.container{padding:0 10px;margin-top:15px}.editor,.preview-panel{padding:16px;border-radius:13px}.status{display:none}.two,.actions{grid-template-columns:1fr}.full{grid-column:auto}}
 @media print{
-  @page{size:A4 portrait;margin:12mm}
-  body{background:#fff}
-  .app-header,.editor,.preview-head,.card-label,.notice{display:none!important}
-  .container,.preview-panel,.cards{margin:0;padding:0;border:0;box-shadow:none}
-  .cards{display:flex;gap:10mm;align-items:flex-start;justify-content:center}
-  .card-wrap{width:53.98mm}
-  .id-card{width:53.98mm;height:85.6mm;border-radius:0;box-shadow:none}
+@page{size:A4 portrait;margin:12mm}
+body{background:#fff}
+.app-header,.editor,.preview-head,.card-label,.notice{display:none!important}
+.container,.preview-panel,.cards{margin:0;padding:0;border:0;box-shadow:none}
+.cards{display:flex;gap:10mm;align-items:flex-start;justify-content:center}
+.card-wrap{width:53.98mm}
+.id-card{width:53.98mm;height:85.6mm;border-radius:0;box-shadow:none}
 }
 </style>
 </head>
-
 <body>
-<header class="app-header">
-  <div class="header-inner">
-    <div class="brand">
-      <div class="brand-mark">JK</div>
-      <div>
-        <h1>JOURKNOWS PH</h1>
-        <p>Portrait Press ID Generator</p>
+<header class="app-header"><div class="header-inner">
+  <div class="brand"><div class="brand-mark">JK</div><div><h1>JOURKNOWS PH</h1><p>Portrait Press ID Generator</p></div></div>
+  <div class="status" id="status">● Changes saved locally</div>
+</div></header>
+
+<main class="container"><div class="workspace">
+
+<section class="panel editor">
+  <h2>Press ID Information</h2>
+  <p class="subtitle">Create a portrait-format JourKnows PH Press ID. The card preview updates as you type.</p>
+
+  <div class="field">
+    <label for="fullName">Full Name</label>
+    <input id="fullName" type="text" placeholder="e.g. Paolo Emmanuel Blanco">
+    <div style="font-size:10px;color:#667085;margin-top:5px">The card displays first name + last name only.</div>
+  </div>
+  <div class="field">
+    <label for="position">Position / Role</label>
+    <input id="position" type="text" placeholder="e.g. News Writer">
+  </div>
+  <div class="field">
+    <label for="department">Department / Desk</label>
+    <select id="department">
+      <option value="">Select department</option>
+      <option>News</option><option>Sports</option><option>Opinion</option>
+      <option>Features & Lifestyle</option><option>Sci-Tech</option><option>Literary</option>
+      <option>Cartoon</option><option>Broadcast</option><option>Copyediting & Language Review</option>
+      <option>Graphics & Layout</option><option>Editorial Board</option><option>Executive Board</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Press ID Number</label>
+    <div class="id-row">
+      <input id="pressId" type="text" placeholder="JK-PRESS-000001">
+      <button class="btn secondary" id="generateId" type="button">Generate</button>
+    </div>
+  </div>
+  <div class="field">
+    <label>Validity Period</label>
+    <div class="two"><input id="validFrom" type="date"><input id="validUntil" type="date"></div>
+  </div>
+  <div class="field">
+    <label>Member Photo</label>
+    <div class="upload">
+      <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp">
+      <small>Portrait photo recommended. Use the controls below to reposition the photo.</small>
+      <div class="photo-controls" id="photoControls">
+        <button class="btn secondary" id="up" type="button">↑</button>
+        <button class="btn secondary" id="down" type="button">↓</button>
+        <button class="btn secondary" id="left" type="button">←</button>
+        <button class="btn secondary" id="right" type="button">→</button>
+        <button class="btn secondary" id="resetPhoto" type="button">Reset</button>
       </div>
     </div>
-    <div class="status" id="status">● Changes saved locally</div>
   </div>
-</header>
-
-<main class="container">
-  <div class="workspace">
-
-    <section class="panel editor">
-      <h2>Press ID Information</h2>
-      <p class="subtitle">
-        Create a portrait-format JourKnows PH Press ID. The card preview updates as you type.
-      </p>
-
-      <div class="field">
-        <label for="fullName">Full Name</label>
-        <input id="fullName" type="text" placeholder="e.g. Paolo Emmanuel Blanco">
-        <div style="font-size:10px;color:#667085;margin-top:5px">
-          The card displays first name + last name only.
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="position">Position / Role</label>
-        <input id="position" type="text" placeholder="e.g. News Writer">
-      </div>
-
-      <div class="field">
-        <label for="department">Department / Desk</label>
-        <select id="department">
-          <option value="">Select department</option>
-          <option>News</option>
-          <option>Sports</option>
-          <option>Opinion</option>
-          <option>Features & Lifestyle</option>
-          <option>Sci-Tech</option>
-          <option>Literary</option>
-          <option>Cartoon</option>
-          <option>Broadcast</option>
-          <option>Copyediting & Language Review</option>
-          <option>Graphics & Layout</option>
-          <option>Editorial Board</option>
-          <option>Executive Board</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Press ID Number</label>
-        <div class="id-row">
-          <input id="pressId" type="text" placeholder="JK-PRESS-000001">
-          <button class="btn secondary" id="generateId" type="button">Generate</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Validity Period</label>
-        <div class="two">
-          <input id="validFrom" type="date">
-          <input id="validUntil" type="date">
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Member Photo</label>
-        <div class="upload">
-          <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp">
-          <small>Portrait photo recommended. Use the controls below to reposition the photo.</small>
-          <div class="photo-controls" id="photoControls">
-            <button class="btn secondary" id="up" type="button">↑</button>
-            <button class="btn secondary" id="down" type="button">↓</button>
-            <button class="btn secondary" id="left" type="button">←</button>
-            <button class="btn secondary" id="right" type="button">→</button>
-            <button class="btn secondary" id="resetPhoto" type="button">Reset</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="verificationBase">Verification Page</label>
-        <input id="verificationBase" type="url" value="https://verify.jourknowsph.org/">
-      </div>
-
-      <div class="actions">
-        <button class="btn primary" id="png" type="button">Download PNGs</button>
-        <button class="btn dark" id="pdf" type="button">Download PDF</button>
-        <button class="btn secondary" id="print" type="button">Print</button>
-        <button class="btn secondary" id="save" type="button">Save Draft</button>
-        <button class="btn secondary full" id="exportRegistry" type="button">Export Registry (JSON)</button>
-        <button class="btn danger full" id="reset" type="button">Reset Generator</button>
-      </div>
-
-      <div class="notice">
-        <strong>Portrait card size:</strong> 53.98 × 85.60 mm (CR80 portrait).
-        Draft information is saved locally in this browser. Clicking "Generate"
-        reserves a Press ID and verification code together in a shared registry
-        so the same pair is never issued to two people. Use "Export Registry" to
-        pull all reserved codes as JSON for the public verification site.
-      </div>
-    </section>
-
-    <section class="panel preview-panel">
-      <div class="preview-head">
-        <div>
-          <h2>Press ID Preview</h2>
-          <span>Portrait format • Front + Back</span>
-        </div>
-      </div>
-
-      <div class="cards">
-
-        <!-- FRONT -->
-        <div class="card-wrap">
-          <div class="card-label">Front</div>
-
-          <div class="id-card front" id="frontCard">
-
-            <div class="front-top">
-              <div class="branding">
-                <img
-                  class="branding-logo"
-                  src="jourknows-logo-transparent-centered.png"
-                  alt="JourKnows PH"
-                >
-              </div>
-              <div class="press-title">PRESS<br>IDENTIFICATION</div>
-            </div>
-
-            <div class="photo-area">
-              <img class="photo" id="photo" alt="Member photo" style="display:none">
-              <div class="placeholder" id="placeholder">MEMBER<br>PHOTO</div>
-            </div>
-
-            <div class="info">
-              <div class="name" id="namePreview">MEMBER NAME</div>
-              <div class="role" id="rolePreview">POSITION / ROLE</div>
-              <div class="desk" id="deskPreview">DEPARTMENT / DESK</div>
-            </div>
-
-            <div class="press-stamp">
-              <div class="press-word">PRESS</div>
-              <div class="press-sub">Official Media Identification</div>
-            </div>
-
-            <div class="front-footer">JOURNALISM IS FOR ALL</div>
-          </div>
-        </div>
-
-        <!-- BACK -->
-        <div class="card-wrap">
-          <div class="card-label">Back</div>
-
-          <div class="id-card back" id="backCard">
-            <div class="back-top"></div>
-
-            <div class="back-brand">
-              <img
-                class="back-brand-logo"
-                src="jourknows-logo-transparent-centered.png"
-                alt="JourKnows PH"
-              >
-            </div>
-
-            <div class="detail-box-back">
-              <div class="detail">
-                <small>Press ID No.</small>
-                <strong id="idPreview">JK-PRESS-000001</strong>
-              </div>
-              <div class="detail">
-                <small>Validity</small>
-                <strong id="validityPreview">Validity Period</strong>
-              </div>
-              <div class="detail">
-                <small>Organization</small>
-                <strong>JourKnows PH</strong>
-              </div>
-              <div class="detail">
-                <small>Purpose</small>
-                <strong>Official Press ID</strong>
-              </div>
-            </div>
-
-            <div class="back-content">
-              <div class="qr" id="qr"></div>
-              <div class="verify-title">Member Verification</div>
-              <div class="back-rule"></div>
-              <div class="verify-copy">
-                Scan this QR code to verify the identity and current
-                affiliation of the bearer with JourKnows PH.
-              </div>
-              <div class="url" id="urlPreview">Verification URL</div>
-              <div class="verify-code" id="verifyCodePreview">CODE: ----------</div>
-            </div>
-
-            <div class="back-disclaimer">
-              This card is issued for authorized journalistic, reporting,
-              production, and organizational activities. It remains the
-              property of JourKnows PH and may be invalidated when the
-              holder is no longer authorized to represent the organization.
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="notice">
-        <strong>Design direction:</strong> The portrait layout uses a strong
-        masthead, centered portrait, large first-and-last-name treatment,
-        compact credential box, and a separate QR verification back.
-      </div>
-    </section>
+  <div class="field">
+    <label for="verificationBase">Verification Page</label>
+    <input id="verificationBase" type="url" value="https://verify.jourknowsph.org/">
   </div>
-</main>
+
+  <div class="actions">
+    <button class="btn primary" id="png" type="button">Download PNGs</button>
+    <button class="btn dark" id="pdf" type="button">Download PDF</button>
+    <button class="btn secondary" id="print" type="button">Print</button>
+    <button class="btn secondary" id="save" type="button">Save Draft</button>
+    <button class="btn secondary full" id="exportRegistry" type="button">Export Registry (JSON)</button>
+    <button class="btn danger full" id="reset" type="button">Reset Generator</button>
+  </div>
+
+  <div class="notice">
+    <strong>Portrait card size:</strong> 53.98 × 85.60 mm (CR80 portrait). Exports are 2422 × 3840 px (4K).
+    Draft information is saved locally in this browser. Clicking "Generate" reserves a Press ID and verification code
+    together in a shared registry so the same pair is never issued to two people. Use "Export Registry" to pull all
+    reserved codes as JSON for the public verification site.
+  </div>
+</section>
+
+<section class="panel preview-panel">
+  <div class="preview-head"><div><h2>Press ID Preview</h2><span>Portrait format • Front + Back</span></div></div>
+  <div class="cards">
+
+    <div class="card-wrap">
+      <div class="card-label">Front</div>
+      <div class="id-card front" id="frontCard">
+        <div class="front-top">
+          <div class="branding"><img class="branding-logo" src="jourknows-logo-transparent-centered.png" alt="JourKnows PH"></div>
+          <div class="press-title">PRESS IDENTIFICATION</div>
+        </div>
+        <div class="photo-area">
+          <img class="photo" id="photo" alt="Member photo" style="display:none">
+          <div class="placeholder" id="placeholder">MEMBER<br>PHOTO</div>
+        </div>
+        <div class="info">
+          <div class="name" id="namePreview">MEMBER NAME</div>
+          <div class="role" id="rolePreview">POSITION / ROLE</div>
+          <div class="desk" id="deskPreview">DEPARTMENT / DESK</div>
+        </div>
+        <div class="press-stamp">
+          <div class="press-word">PRESS</div>
+          <div class="press-sub">Official Media Identification</div>
+        </div>
+        <div class="front-footer">JOURNALISM IS FOR ALL</div>
+      </div>
+    </div>
+
+    <div class="card-wrap">
+      <div class="card-label">Back</div>
+      <div class="id-card back" id="backCard">
+        <div class="back-top"></div>
+        <div class="back-brand"><img class="back-brand-logo" src="jourknows-logo-transparent-centered.png" alt="JourKnows PH"></div>
+        <div class="detail-box-back">
+          <div class="detail"><small>Press ID No.</small><strong id="idPreview">JK-PRESS-000001</strong></div>
+          <div class="detail"><small>Validity</small><strong id="validityPreview">Validity Period</strong></div>
+          <div class="detail"><small>Organization</small><strong>JourKnows PH</strong></div>
+          <div class="detail"><small>Purpose</small><strong>Official Press ID</strong></div>
+        </div>
+        <div class="back-content">
+          <div class="qr" id="qr"></div>
+          <div class="verify-title">Member Verification</div>
+          <div class="back-rule"></div>
+          <div class="verify-copy">Scan this QR code to verify the identity and current affiliation of the bearer with JourKnows PH.</div>
+          <div class="url" id="urlPreview">Verification URL</div>
+          <div class="verify-code" id="verifyCodePreview">CODE: ----------</div>
+        </div>
+        <div class="back-disclaimer">This card is issued for authorized journalistic, reporting, production, and organizational activities. It remains the property of JourKnows PH and may be invalidated when the holder is no longer authorized to represent the organization.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</div></main>
 
 <script>
 const $ = id => document.getElementById(id);
 const KEY = "jourknows_portrait_press_id";
+const OUT_W = 2422, OUT_H = 3840;                 // 4K height, exact CR80 portrait ratio
+const STAGE_W = 319, STAGE_H = 319 * 85.6 / 53.98; // fixed design size used for export
 
 let photoData = null;
 let photoPos = {x:50,y:50};
 let verifyCode = null;
 
 function genVerifyCode(len=10) {
-  // Unambiguous charset (no 0/O/1/I) so a manually-typed fallback code is easy to read.
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const arr = new Uint32Array(len);
   (window.crypto || window.msCrypto).getRandomValues(arr);
@@ -546,76 +263,75 @@ function firstLastName(full) {
   const parts = full.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "MEMBER NAME";
   if (parts.length === 1) return parts[0].toUpperCase();
-
-  // First word + final word. This keeps middle names/initials off the card.
   return `${parts[0]} ${parts[parts.length-1]}`.toUpperCase();
+}
+
+function nameFontPx(text, cardW) {
+  const k = cardW / STAGE_W;
+  const p = document.createElement("span");
+  p.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;font-family:'Poppins',Arial,sans-serif;font-weight:900;text-transform:uppercase;font-size:100px;line-height:1";
+  p.textContent = text;
+  document.body.appendChild(p);
+  const w = p.getBoundingClientRect().width || 1;
+  p.remove();
+  return Math.max(12 * k, Math.min(28 * k, 100 * cardW * 0.82 / w));
+}
+
+function fitName() {
+  const n = $("namePreview");
+  n.style.fontSize = nameFontPx(n.textContent, $("frontCard").clientWidth) + "px";
 }
 
 function fmtDate(v) {
   if (!v) return "";
-  const d = new Date(v + "T00:00:00");
-  return d.toLocaleDateString("en-PH", {
-    month:"short", day:"numeric", year:"numeric"
-  });
+  return new Date(v + "T00:00:00").toLocaleDateString("en-PH", {month:"short", day:"numeric", year:"numeric"});
 }
 
 function validity() {
-  const a = fmtDate($("validFrom").value);
-  const b = fmtDate($("validUntil").value);
+  const a = fmtDate($("validFrom").value), b = fmtDate($("validUntil").value);
   if (!a && !b) return "Validity Period";
   if (a && b) return `${a} – ${b}`;
-  if (a) return `From ${a}`;
-  return `Until ${b}`;
+  return a ? `From ${a}` : `Until ${b}`;
 }
 
 function verificationURL() {
   let base = $("verificationBase").value.trim() || "https://verify.jourknowsph.org/";
   if (!base.endsWith("/")) base += "/";
-  const code = verifyCode || "PENDING000";
-  return base + encodeURIComponent(code);
+  return base + encodeURIComponent(verifyCode || "PENDING000");
 }
 
 function makeQR() {
   $("qr").innerHTML = "";
-  new QRCode($("qr"), {
-    text: verificationURL(),
-    width: 300,
-    height: 300,
-    colorDark:"#000E4B",
-    colorLight:"#ffffff",
-    correctLevel:QRCode.CorrectLevel.H
-  });
+  new QRCode($("qr"), {text: verificationURL(), width: 300, height: 300, colorDark:"#000E4B", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.H});
   $("urlPreview").textContent = verificationURL();
   $("verifyCodePreview").textContent = "CODE: " + (verifyCode || "PENDING000");
 }
 
+// High-resolution QR used only for export
+function qrDataURL(size) {
+  const tmp = document.createElement("div");
+  new QRCode(tmp, {text: verificationURL(), width: size, height: size, colorDark:"#000E4B", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.H});
+  return tmp.querySelector("canvas").toDataURL("image/png");
+}
+
 function update() {
   $("namePreview").textContent = firstLastName($("fullName").value);
+  fitName();
   $("rolePreview").textContent = $("position").value.trim().toUpperCase() || "POSITION / ROLE";
   $("deskPreview").textContent = $("department").value.toUpperCase() || "DEPARTMENT / DESK";
   $("idPreview").textContent = $("pressId").value.trim() || "JK-PRESS-000001";
   $("validityPreview").textContent = validity();
-
   $("photo").style.objectPosition = `${photoPos.x}% ${photoPos.y}%`;
-
   makeQR();
   save();
 }
 
 function save() {
   const data = {
-    fullName:$("fullName").value,
-    position:$("position").value,
-    department:$("department").value,
-    pressId:$("pressId").value,
-    validFrom:$("validFrom").value,
-    validUntil:$("validUntil").value,
-    verificationBase:$("verificationBase").value,
-    photoData,
-    photoPos,
-    verifyCode
+    fullName:$("fullName").value, position:$("position").value, department:$("department").value,
+    pressId:$("pressId").value, validFrom:$("validFrom").value, validUntil:$("validUntil").value,
+    verificationBase:$("verificationBase").value, photoData, photoPos, verifyCode
   };
-
   try {
     localStorage.setItem(KEY, JSON.stringify(data));
     $("status").textContent = "● Changes saved locally";
@@ -629,60 +345,37 @@ let _db = null;
 const _sessionHolder = (crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Date.now().toString(36)));
 
 async function reserveId() {
-  // No shared registry available: fall back to a plain random id/code,
-  // with no cross-device uniqueness guarantee.
   if (!_db) {
-    return {
-      ok: true,
-      guaranteed: false,
-      pressId: "JK-PRESS-" + Math.floor(100000 + Math.random()*900000),
-      verifyCode: genVerifyCode()
-    };
+    return {ok:true, guaranteed:false, pressId:"JK-PRESS-" + Math.floor(100000 + Math.random()*900000), verifyCode:genVerifyCode()};
   }
-
   for (let attempts = 0; attempts < 8; attempts++) {
     const candidateId = "JK-PRESS-" + Math.floor(100000 + Math.random()*900000);
     const candidateCode = genVerifyCode();
     const ref = _db.doc("issued/" + candidateId);
-
     try {
       const lease = await ref.acquire({holder:_sessionHolder, ttlMs:8000});
-      if (!lease.acquired) continue; // someone else is mid-claim on this id, try another
-
+      if (!lease.acquired) continue;
       const snap = await ref.get();
-      if (snap.exists && snap.data() && snap.data().verifyCode) continue; // already permanently issued
-
-      await ref.set({
-        pressId: candidateId,
-        verifyCode: candidateCode,
-        holderName: ($("fullName").value || "").trim(),
-        issuedAt: new Date().toISOString()
-      });
+      if (snap.exists && snap.data() && snap.data().verifyCode) continue;
+      await ref.set({pressId:candidateId, verifyCode:candidateCode, holderName:($("fullName").value || "").trim(), issuedAt:new Date().toISOString()});
       return {ok:true, guaranteed:true, pressId:candidateId, verifyCode:candidateCode};
-    } catch(e) {
-      console.error("reserve attempt failed", e);
-    }
+    } catch(e) { console.error("reserve attempt failed", e); }
   }
   return {ok:false};
 }
 
 async function generateId() {
-  const btn = $("generateId");
-  const old = btn.textContent;
+  const btn = $("generateId"), old = btn.textContent;
   btn.disabled = true;
   btn.textContent = "Reserving...";
-
   const result = await reserveId();
   if (result.ok) {
     $("pressId").value = result.pressId;
     verifyCode = result.verifyCode;
-    if (!result.guaranteed) {
-      console.warn("Press ID issued without a shared uniqueness check.");
-    }
+    if (!result.guaranteed) console.warn("Press ID issued without a shared uniqueness check.");
   } else {
     alert("Couldn't confirm a unique Press ID right now. Please try Generate again in a moment.");
   }
-
   btn.disabled = false;
   btn.textContent = old;
   update();
@@ -695,7 +388,6 @@ function applyPhoto() {
     $("photoControls").style.display = "none";
     return;
   }
-
   $("photo").src = photoData;
   $("photo").style.display = "block";
   $("placeholder").style.display = "none";
@@ -706,14 +398,8 @@ function applyPhoto() {
 $("photoInput").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
-  reader.onload = ev => {
-    photoData = ev.target.result;
-    photoPos = {x:50,y:50};
-    applyPhoto();
-    update();
-  };
+  reader.onload = ev => { photoData = ev.target.result; photoPos = {x:50,y:50}; applyPhoto(); update(); };
   reader.readAsDataURL(file);
 });
 
@@ -723,53 +409,36 @@ function movePhoto(dx,dy) {
   applyPhoto();
   save();
 }
-
 $("up").onclick = () => movePhoto(0,-5);
 $("down").onclick = () => movePhoto(0,5);
 $("left").onclick = () => movePhoto(-5,0);
 $("right").onclick = () => movePhoto(5,0);
-$("resetPhoto").onclick = () => {
-  photoPos={x:50,y:50};
-  applyPhoto();
-  save();
-};
+$("resetPhoto").onclick = () => { photoPos={x:50,y:50}; applyPhoto(); save(); };
 
-["fullName","position","department","pressId","validFrom","validUntil","verificationBase"]
-.forEach(id => {
+["fullName","position","department","pressId","validFrom","validUntil","verificationBase"].forEach(id => {
   $(id).addEventListener("input", update);
   $(id).addEventListener("change", update);
 });
 
 $("generateId").onclick = generateId;
-
 $("save").onclick = () => {
   save();
   const old = $("save").textContent;
   $("save").textContent = "Saved ✓";
   setTimeout(() => $("save").textContent = old, 1200);
 };
-
 $("print").onclick = () => window.print();
 
 $("exportRegistry").onclick = async function() {
-  if (!_db) {
-    alert("The shared registry isn't available in this view, so there's nothing to export from here.");
-    return;
-  }
+  if (!_db) { alert("The shared registry isn't available in this view, so there's nothing to export from here."); return; }
   const old = this.textContent;
   this.textContent = "Exporting...";
   this.disabled = true;
-
   try {
     const snap = await _db.collection("issued").limit(1000).get();
     const records = snap.docs.map(d => d.data());
-    const blob = new Blob([JSON.stringify(records, null, 2)], {type:"application/json"});
-    await offerDownload("data.json", blob);
-  } catch(e) {
-    alert("Export failed. Please try again.");
-    console.error(e);
-  }
-
+    await offerDownload("data.json", new Blob([JSON.stringify(records, null, 2)], {type:"application/json"}));
+  } catch(e) { alert("Export failed. Please try again."); console.error(e); }
   this.disabled = false;
   this.textContent = old;
 };
@@ -780,36 +449,42 @@ $("reset").onclick = () => {
   location.reload();
 };
 
+// Renders one card at a fixed 319px design size, scaled up to 2422 x 3840 px.
 async function cardCanvas(el) {
-  // Render the card itself only. Transparent pixels remain transparent outside
-  // the card artwork, and the output is normalized to 638 × 1012 px, which is
-  // the 300-DPI equivalent of a 53.98 × 85.60 mm portrait CR80 card.
+  await document.fonts.ready;
+  const id = el.id;
+  const nameSize = nameFontPx($("namePreview").textContent, STAGE_W);
+  const qrURL = id === "backCard" ? qrDataURL(1024) : null;
+
   const raw = await html2canvas(el, {
-    scale: 4,
+    scale: OUT_H / STAGE_H,
     useCORS: true,
     backgroundColor: null,
     logging: false,
-    imageTimeout: 0
+    imageTimeout: 0,
+    onclone: doc => {
+      const card = doc.getElementById(id);
+      card.parentElement.style.width = STAGE_W + "px";
+      Object.assign(card.style, {width:STAGE_W + "px", height:STAGE_H + "px", aspectRatio:"auto", boxShadow:"none"});
+      const n = doc.getElementById("namePreview");
+      if (n) n.style.fontSize = nameSize + "px";
+      if (qrURL) card.querySelector(".qr").innerHTML = '<img src="' + qrURL + '" style="width:100%;height:100%;display:block">';
+    }
   });
 
   const out = document.createElement("canvas");
-  out.width = 638;
-  out.height = 1012;
+  out.width = OUT_W;
+  out.height = OUT_H;
   const ctx = out.getContext("2d");
-  ctx.clearRect(0, 0, out.width, out.height);
-  ctx.drawImage(raw, 0, 0, out.width, out.height);
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(raw, 0, 0, OUT_W, OUT_H);
   return out;
 }
 
 async function offerDownload(filename, blob) {
   if (_downloads) {
-    try {
-      await _downloads.save({filename, data: blob});
-      return true;
-    } catch(e) {
-      if (e && e.code === "declined") return false;
-      console.error("downloads.save failed", e);
-    }
+    try { await _downloads.save({filename, data: blob}); return true; }
+    catch(e) { if (e && e.code === "declined") return false; console.error("downloads.save failed", e); }
   }
   try {
     const url = URL.createObjectURL(blob);
@@ -821,100 +496,67 @@ async function offerDownload(filename, blob) {
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
     return true;
-  } catch(e) {
-    alert("Download failed. Please try again.");
-    console.error(e);
-    return false;
-  }
+  } catch(e) { alert("Download failed. Please try again."); console.error(e); return false; }
 }
 
 $("png").onclick = async function() {
   const old = this.textContent;
-  this.textContent = "Generating...";
+  this.textContent = "Generating 4K...";
   this.disabled = true;
-
   try {
     const front = await cardCanvas($("frontCard"));
     const back = await cardCanvas($("backCard"));
     const base = $("pressId").value.trim() || "JK-PRESS-ID";
-
-    const frontBlob = await new Promise(resolve => front.toBlob(resolve, "image/png"));
-    const backBlob = await new Promise(resolve => back.toBlob(resolve, "image/png"));
-
-    // Separate files preserve the exact portrait card dimensions. There is no
-    // white canvas surrounding either side.
+    const frontBlob = await new Promise(r => front.toBlob(r, "image/png"));
+    const backBlob = await new Promise(r => back.toBlob(r, "image/png"));
     await offerDownload(`${base}-FRONT.png`, frontBlob);
     setTimeout(() => offerDownload(`${base}-BACK.png`, backBlob), 350);
-  } catch(e) {
-    alert("PNG generation failed. Please try again.");
-    console.error(e);
-  }
-
+  } catch(e) { alert("PNG generation failed. Please try again."); console.error(e); }
   this.disabled = false;
-  this.textContent = "Download PNGs";
+  this.textContent = old;
 };
 
 $("pdf").onclick = async function() {
   const old = this.textContent;
-  this.textContent = "Generating...";
+  this.textContent = "Generating 4K...";
   this.disabled = true;
-
   try {
     const front = await cardCanvas($("frontCard"));
     const back = await cardCanvas($("backCard"));
     const { jsPDF } = window.jspdf;
-
-    // PDF pages are the exact physical card size, not A4/Letter.
-    const cardW = 53.98;
-    const cardH = 85.60;
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: [cardW, cardH],
-      compress: true
-    });
-
+    const cardW = 53.98, cardH = 85.60;
+    const pdf = new jsPDF({orientation:"portrait", unit:"mm", format:[cardW, cardH], compress:true});
     pdf.addImage(front.toDataURL("image/png"), "PNG", 0, 0, cardW, cardH, undefined, "FAST");
     pdf.addPage([cardW, cardH], "portrait");
     pdf.addImage(back.toDataURL("image/png"), "PNG", 0, 0, cardW, cardH, undefined, "FAST");
-
-    const blob = pdf.output("blob");
-    await offerDownload(`${$("pressId").value.trim() || "JK-PRESS-ID"}-FRONT-BACK.pdf`, blob);
-  } catch(e) {
-    alert("PDF generation failed. Please try again.");
-    console.error(e);
-  }
-
+    await offerDownload(`${$("pressId").value.trim() || "JK-PRESS-ID"}-FRONT-BACK.pdf`, pdf.output("blob"));
+  } catch(e) { alert("PDF generation failed. Please try again."); console.error(e); }
   this.disabled = false;
-  this.textContent = "Download PDF";
+  this.textContent = old;
 };
 
 function load() {
   try {
-    const raw=localStorage.getItem(KEY);
-    if (!raw) {
-      generateId();
-      return;
-    }
-
-    const d=JSON.parse(raw);
-    $("fullName").value=d.fullName||"";
-    $("position").value=d.position||"";
-    $("department").value=d.department||"";
-    $("pressId").value=d.pressId||"";
-    $("validFrom").value=d.validFrom||"";
-    $("validUntil").value=d.validUntil||"";
-    $("verificationBase").value=d.verificationBase||"https://verify.jourknowsph.org/";
-    photoData=d.photoData||null;
-    photoPos=d.photoPos||{x:50,y:50};
-    verifyCode=d.verifyCode||genVerifyCode();
-
+    const raw = localStorage.getItem(KEY);
+    if (!raw) { generateId(); return; }
+    const d = JSON.parse(raw);
+    $("fullName").value = d.fullName || "";
+    $("position").value = d.position || "";
+    $("department").value = d.department || "";
+    $("pressId").value = d.pressId || "";
+    $("validFrom").value = d.validFrom || "";
+    $("validUntil").value = d.validUntil || "";
+    $("verificationBase").value = d.verificationBase || "https://verify.jourknowsph.org/";
+    photoData = d.photoData || null;
+    photoPos = d.photoPos || {x:50,y:50};
+    verifyCode = d.verifyCode || genVerifyCode();
     applyPhoto();
     update();
-  } catch(e) {
-    generateId();
-  }
+  } catch(e) { generateId(); }
 }
+
+window.addEventListener("resize", fitName);
+document.fonts.ready.then(fitName);
 
 (async function init() {
   try {
