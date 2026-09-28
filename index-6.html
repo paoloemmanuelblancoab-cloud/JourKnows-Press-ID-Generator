@@ -1,0 +1,4575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>JourKnows PH — Press ID Generator</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --navy:#000E4B;
+  --blue:#00198D;
+  --light:#DCEBFF;
+  --ink:#101828;
+  --muted:#667085;
+  --border:#D7E1EF;
+  --green:#027A48;
+  --green-bg:#ECFDF3;
+  --red:#B42318;
+  --red-bg:#FEF3F2;
+  --orange:#B54708;
+  --orange-bg:#FFFAEB;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Inter,Arial,Helvetica,sans-serif;
+  color:var(--ink);
+  background:#eef4fc;
+}
+
+button,
+input,
+select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+button:disabled{
+  cursor:not-allowed;
+}
+
+.app-header{
+  background:var(--navy);
+  color:#fff;
+  padding:18px 26px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  box-shadow:0 5px 24px rgba(0,14,75,.18);
+}
+
+.header-inner{
+  max-width:1450px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.brand-mark{
+  width:44px;
+  height:44px;
+  border-radius:10px;
+  background:#fff;
+  color:var(--navy);
+  display:grid;
+  place-items:center;
+  font-weight:950;
+}
+
+.brand h1{
+  font-size:19px;
+  margin:0;
+  font-weight:950;
+  letter-spacing:.5px;
+}
+
+.brand p{
+  font-size:11px;
+  margin:3px 0 0;
+  opacity:.72;
+}
+
+.status{
+  font-size:12px;
+  opacity:.8;
+}
+
+.container{
+  max-width:1450px;
+  margin:28px auto 60px;
+  padding:0 20px;
+}
+
+.workspace{
+  display:grid;
+  grid-template-columns:410px 1fr;
+  gap:28px;
+  align-items:start;
+}
+
+.panel{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:0 12px 35px rgba(15,23,42,.07);
+}
+
+.editor{
+  padding:24px;
+  position:sticky;
+  top:88px;
+}
+
+h2{
+  color:var(--navy);
+  margin:0 0 6px;
+  font-size:21px;
+}
+
+.subtitle{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+  margin:0 0 22px;
+}
+
+.field{
+  margin:0 0 16px;
+}
+
+label{
+  display:block;
+  font-size:12px;
+  font-weight:850;
+  color:#344054;
+  margin-bottom:7px;
+}
+
+input,
+select{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  outline:none;
+  background:#fff;
+  color:var(--ink);
+}
+
+input:focus,
+select:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(0,25,141,.08);
+}
+
+input[readonly]{
+  background:#f4f7fb;
+  color:#667085;
+  cursor:not-allowed;
+}
+
+.two{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.id-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+
+.btn{
+  border:0;
+  border-radius:9px;
+  padding:11px 13px;
+  font-size:12px;
+  font-weight:850;
+  transition:.15s;
+}
+
+.btn:hover:not(:disabled){
+  transform:translateY(-1px);
+}
+
+.btn:disabled{
+  opacity:.55;
+}
+
+.primary{
+  background:var(--blue);
+  color:#fff;
+}
+
+.dark{
+  background:var(--navy);
+  color:#fff;
+}
+
+.secondary{
+  background:#e9f0fa;
+  color:var(--navy);
+}
+
+.danger{
+  background:#fee4e2;
+  color:#b42318;
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:21px;
+}
+
+.full{
+  grid-column:1/-1;
+}
+
+.upload{
+  border:2px dashed #b8cae2;
+  border-radius:11px;
+  padding:15px;
+  background:#f8fbff;
+  text-align:center;
+}
+
+.upload small{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.4;
+  margin-top:7px;
+}
+
+.photo-controls{
+  display:none;
+  grid-template-columns:repeat(5,1fr);
+  gap:5px;
+  margin-top:10px;
+}
+
+.photo-controls button{
+  padding:8px 3px;
+  font-size:11px;
+}
+
+.notice{
+  margin-top:17px;
+  padding:12px;
+  border-radius:9px;
+  background:#f3f7fd;
+  color:#475467;
+  border:1px solid #dbe6f3;
+  font-size:10.5px;
+  line-height:1.5;
+}
+
+.generation-status{
+  margin-top:8px;
+  padding:9px 10px;
+  border-radius:8px;
+  font-size:10px;
+  line-height:1.45;
+  background:#f3f7fd;
+  border:1px solid #dbe6f3;
+  color:#667085;
+}
+
+.generation-status.ready{
+  background:var(--green-bg);
+  border-color:#abefc6;
+  color:var(--green);
+}
+
+.generation-status.locked{
+  background:#f2f4f7;
+  border-color:#d0d5dd;
+  color:#475467;
+}
+
+.duplicate-warning{
+  display:none;
+  margin-top:8px;
+  padding:10px;
+  border-radius:8px;
+  background:var(--red-bg);
+  border:1px solid #fecdca;
+  color:var(--red);
+  font-size:10px;
+  line-height:1.45;
+}
+
+.duplicate-warning.show{
+  display:block;
+}
+
+.preview-panel{
+  padding:24px;
+  overflow:hidden;
+}
+
+.preview-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:22px;
+}
+
+.preview-head h2{
+  margin:0;
+}
+
+.preview-head span{
+  font-size:11px;
+  color:var(--muted);
+}
+
+.cards{
+  display:flex;
+  gap:28px;
+  justify-content:center;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+
+.card-wrap{
+  width:min(100%,319px);
+}
+
+.card-label{
+  text-align:center;
+  font-size:10px;
+  font-weight:900;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  margin-bottom:9px;
+}
+
+/* CARD */
+
+.id-card{
+  width:100%;
+  aspect-ratio:53.98/85.6;
+  position:relative;
+  overflow:hidden;
+  border-radius:11px;
+  box-shadow:0 16px 38px rgba(0,14,75,.18);
+  background:#fff;
+  font-family:'Poppins',Arial,Helvetica,sans-serif;
+  font-weight:700;
+}
+
+.front{
+  background:#ffffff;
+}
+
+.front:before{
+  content:"";
+  position:absolute;
+  left:-20%;
+  right:-20%;
+  top:10%;
+  height:47%;
+  background:var(--light);
+  border-radius:50%;
+  z-index:0;
+}
+
+.front-top{
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:25%;
+  background:var(--navy);
+  color:#fff;
+  z-index:2;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-top:42px;
+  gap:5px;
+}
+
+.front-top:after{
+  content:"";
+  position:absolute;
+  width:130%;
+  height:90px;
+  left:-15%;
+  bottom:-64px;
+  background:var(--blue);
+  border-radius:50%;
+}
+
+.branding{
+  position:relative;
+  z-index:3;
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+
+.branding-logo{
+  display:block;
+  width:150px;
+  height:auto;
+}
+
+.press-title{
+  position:relative;
+  z-index:3;
+  text-align:center;
+  white-space:nowrap;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:1.3px;
+  opacity:.86;
+}
+
+.photo-area{
+  position:absolute;
+  z-index:4;
+  top:25.5%;
+  left:26%;
+  width:48%;
+  aspect-ratio:1/1;
+  border-radius:50%;
+  overflow:hidden;
+}
+
+.photo{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:50% 50%;
+  border:7px solid #fff;
+  border-radius:50%;
+  box-shadow:0 9px 25px rgba(0,14,75,.16);
+  background:#e7edf6;
+  display:block;
+}
+
+.placeholder{
+  position:absolute;
+  inset:7px;
+  background:#e7edf6;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#8a99ad;
+  font-size:11px;
+  font-weight:900;
+  text-align:center;
+}
+
+.info{
+  position:absolute;
+  z-index:5;
+  left:8%;
+  right:8%;
+  top:57.5%;
+  text-align:center;
+}
+
+.name{
+  color:#111827;
+  font-size:28px;
+  white-space:nowrap;
+  line-height:1;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:-.5px;
+}
+
+.role{
+  color:var(--blue);
+  font-size:10px;
+  font-weight:900;
+  margin-top:7px;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+}
+
+.desk{
+  color:#667085;
+  font-size:8px;
+  font-weight:800;
+  margin-top:5px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.press-stamp{
+  position:absolute;
+  z-index:5;
+  left:0;
+  right:0;
+  bottom:10%;
+  text-align:center;
+}
+
+.press-word{
+  display:inline-block;
+  color:var(--navy);
+  font-size:56px;
+  font-weight:900;
+  letter-spacing:9px;
+  margin-right:-9px;
+  line-height:1;
+}
+
+.press-sub{
+  color:var(--blue);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  margin-top:6px;
+}
+
+.front-footer{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:5.5%;
+  background:var(--navy);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:1.2px;
+  z-index:6;
+}
+
+.back{
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      rgba(255,255,255,.09),
+      transparent 30%
+    ),
+    var(--navy);
+  color:#fff;
+}
+
+.back-top{
+  position:absolute;
+  top:0;
+  left:-28%;
+  width:156%;
+  height:19.5%;
+  background:var(--blue);
+  border-radius:0 0 50% 50% / 0 0 100% 100%;
+}
+
+.back-brand{
+  position:absolute;
+  top:9.5%;
+  left:8%;
+  right:8%;
+  z-index:2;
+  text-align:center;
+}
+
+.back-brand-logo{
+  display:block;
+  width:150px;
+  height:auto;
+  margin:0 auto;
+}
+
+.detail-box-back{
+  position:absolute;
+  z-index:5;
+  left:8%;
+  right:8%;
+  top:29%;
+  height:17%;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:11px;
+  padding:10px 12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 10px;
+}
+
+.detail-box-back .detail small{
+  color:rgba(255,255,255,.55);
+}
+
+.detail-box-back .detail strong{
+  color:#fff;
+}
+
+.detail small{
+  display:block;
+  color:#667085;
+  font-size:7px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-weight:900;
+  margin-bottom:3px;
+}
+
+.detail strong{
+  display:block;
+  color:var(--navy);
+  font-size:9px;
+  line-height:1.15;
+  word-break:break-word;
+}
+
+#idPreview{
+  font-weight:900;
+}
+
+.back-content{
+  position:absolute;
+  left:8%;
+  right:8%;
+  top:47.5%;
+  bottom:13%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  justify-content:flex-start;
+}
+
+.qr{
+  width:36%;
+  aspect-ratio:1;
+  background:#fff;
+  padding:7px;
+  display:grid;
+  place-items:center;
+  margin-bottom:8px;
+  flex-shrink:0;
+}
+
+.qr img,
+.qr canvas{
+  width:100%!important;
+  height:100%!important;
+}
+
+.locked-qr{
+  background:#eef3fa;
+  border:2px dashed #b8cae2;
+}
+
+.qr-lock{
+  color:#667085;
+  font-size:7px;
+  line-height:1.45;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+}
+
+.qr-lock strong{
+  display:block;
+  color:var(--navy);
+  font-size:9px;
+  margin-bottom:5px;
+}
+
+.verify-title{
+  font-size:13px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.verify-copy{
+  color:rgba(255,255,255,.76);
+  font-size:8px;
+  line-height:1.55;
+  margin:5px 0 7px;
+  max-width:90%;
+}
+
+.url{
+  font-size:7px;
+  color:rgba(255,255,255,.58);
+  word-break:break-all;
+}
+
+.verify-code{
+  font-size:8px;
+  color:rgba(255,255,255,.85);
+  letter-spacing:2.5px;
+  margin-top:0;
+  font-weight:900;
+}
+
+.back-rule{
+  width:55px;
+  height:3px;
+  background:#fff;
+  border-radius:99px;
+  margin:3px 0 4px;
+  opacity:.85;
+}
+
+.back-disclaimer{
+  position:absolute;
+  left:9%;
+  right:9%;
+  bottom:3.5%;
+  text-align:center;
+  color:rgba(255,255,255,.48);
+  font-size:6.5px;
+  line-height:1.4;
+}
+
+@media(max-width:1100px){
+  .workspace{
+    grid-template-columns:1fr;
+  }
+
+  .editor{
+    position:relative;
+    top:auto;
+  }
+}
+
+@media(max-width:600px){
+  .container{
+    padding:0 10px;
+    margin-top:15px;
+  }
+
+  .editor,
+  .preview-panel{
+    padding:16px;
+    border-radius:13px;
+  }
+
+  .status{
+    display:none;
+  }
+
+  .two,
+  .actions{
+    grid-template-columns:1fr;
+  }
+
+  .full{
+    grid-column:auto;
+  }
+}
+
+@media print{
+  @page{
+    size:A4 portrait;
+    margin:12mm;
+  }
+
+  body{
+    background:#fff;
+  }
+
+  .app-header,
+  .editor,
+  .preview-head,
+  .card-label,
+  .notice{
+    display:none!important;
+  }
+
+  .container,
+  .preview-panel,
+  .cards{
+    margin:0;
+    padding:0;
+    border:0;
+    box-shadow:none;
+  }
+
+  .cards{
+    display:flex;
+    gap:10mm;
+    align-items:flex-start;
+    justify-content:center;
+  }
+
+  .card-wrap{
+    width:53.98mm;
+  }
+
+  .id-card{
+    width:53.98mm;
+    height:85.6mm;
+    border-radius:0;
+    box-shadow:none;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+
+    <div class="brand">
+      <div class="brand-mark">JK</div>
+
+      <div>
+        <h1>JOURKNOWS PH</h1>
+        <p>Portrait Press ID Generator</p>
+      </div>
+    </div>
+
+    <div class="status" id="status">
+      ● Awaiting member details
+    </div>
+
+  </div>
+</header>
+
+
+<main class="container">
+
+<div class="workspace">
+
+<!-- ============================================================
+     EDITOR
+============================================================ -->
+
+<section class="panel editor">
+
+  <h2>Press ID Information</h2>
+
+  <p class="subtitle">
+    Complete the required member details before generating a JourKnows PH
+    Press ID. Each record can generate only one Press ID.
+  </p>
+
+
+  <!-- FULL NAME -->
+
+  <div class="field">
+
+    <label for="fullName">
+      Full Name <span style="color:#B42318">*</span>
+    </label>
+
+    <input
+      id="fullName"
+      type="text"
+      placeholder="e.g. Paolo Emmanuel Blanco"
+      autocomplete="name"
+    >
+
+    <div style="font-size:10px;color:#667085;margin-top:5px">
+      The card and verification page display first name + last name only.
+    </div>
+
+  </div>
+
+
+  <!-- POSITION -->
+
+  <div class="field">
+
+    <label for="position">
+      Position / Role <span style="color:#B42318">*</span>
+    </label>
+
+    <input
+      id="position"
+      type="text"
+      placeholder="e.g. News Writer"
+    >
+
+  </div>
+
+
+  <!-- DEPARTMENT -->
+
+  <div class="field">
+
+    <label for="department">
+      Department / Desk <span style="color:#B42318">*</span>
+    </label>
+
+    <select id="department">
+
+      <option value="">
+        Select department
+      </option>
+
+      <option>News</option>
+      <option>Sports</option>
+      <option>Opinion</option>
+      <option>Features & Lifestyle</option>
+      <option>Sci-Tech</option>
+      <option>Literary</option>
+      <option>Cartoon</option>
+      <option>Broadcast</option>
+      <option>Copyediting & Language Review</option>
+      <option>Graphics & Layout</option>
+      <option>Editorial Board</option>
+      <option>Executive Board</option>
+
+    </select>
+
+  </div>
+
+
+  <!-- PRESS ID -->
+
+  <div class="field">
+
+    <label>
+      Press ID Number
+    </label>
+
+    <div class="id-row">
+
+      <input
+        id="pressId"
+        type="text"
+        value="LOCKED — COMPLETE BASIC DETAILS"
+        readonly
+      >
+
+      <button
+        class="btn secondary"
+        id="generateId"
+        type="button"
+        disabled
+      >
+        Generate
+      </button>
+
+    </div>
+
+    <div
+      id="generationStatus"
+      class="generation-status"
+    >
+      Enter the full name, position/role, and department before generating.
+    </div>
+
+    <div
+      id="duplicateWarning"
+      class="duplicate-warning"
+    >
+      Duplicate entry detected. This record cannot receive a new Press ID.
+    </div>
+
+  </div>
+
+
+  <!-- VALIDITY -->
+
+  <div class="field">
+
+    <label>
+      Validity Period
+    </label>
+
+    <div class="two">
+
+      <input
+        id="validFrom"
+        type="date"
+      >
+
+      <input
+        id="validUntil"
+        type="date"
+      >
+
+    </div>
+
+  </div>
+
+
+  <!-- PHOTO -->
+
+  <div class="field">
+
+    <label>
+      Member Photo
+    </label>
+
+    <div class="upload">
+
+      <input
+        id="photoInput"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+      >
+
+      <small>
+        Portrait photo recommended. Use the controls below to reposition the photo.
+      </small>
+
+      <div
+        class="photo-controls"
+        id="photoControls"
+      >
+
+        <button
+          class="btn secondary"
+          id="up"
+          type="button"
+        >↑</button>
+
+        <button
+          class="btn secondary"
+          id="down"
+          type="button"
+        >↓</button>
+
+        <button
+          class="btn secondary"
+          id="left"
+          type="button"
+        >←</button>
+
+        <button
+          class="btn secondary"
+          id="right"
+          type="button"
+        >→</button>
+
+        <button
+          class="btn secondary"
+          id="resetPhoto"
+          type="button"
+        >Reset</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- VERIFICATION PAGE -->
+
+  <div class="field">
+
+    <label for="verificationBase">
+      Verification Page
+    </label>
+
+    <input
+      id="verificationBase"
+      type="url"
+      value="https://jourknows-verify-press-id.vercel.app/"
+    >
+
+    <div style="font-size:10px;color:#667085;margin-top:5px">
+      This address is used as the destination of the generated QR code.
+    </div>
+
+  </div>
+
+
+  <!-- ACTIONS -->
+
+  <div class="actions">
+
+    <button
+      class="btn primary"
+      id="png"
+      type="button"
+    >
+      Download PNGs
+    </button>
+
+    <button
+      class="btn dark"
+      id="pdf"
+      type="button"
+    >
+      Download PDF
+    </button>
+
+    <button
+      class="btn secondary"
+      id="print"
+      type="button"
+    >
+      Print
+    </button>
+
+    <button
+      class="btn secondary"
+      id="save"
+      type="button"
+    >
+      Save Draft
+    </button>
+
+    <button
+      class="btn secondary full"
+      id="exportRegistry"
+      type="button"
+    >
+      Export Registry (JSON)
+    </button>
+
+    <button
+      class="btn secondary full"
+      id="importRegistry"
+      type="button"
+    >
+      Import existing data.json
+    </button>
+
+    <input
+      id="importFile"
+      type="file"
+      accept="application/json,.json"
+      hidden
+    >
+
+    <button
+      class="btn danger full"
+      id="reset"
+      type="button"
+    >
+      Reset Generator
+    </button>
+
+  </div>
+
+
+  <div class="notice">
+
+    <strong>Portrait card size:</strong>
+    53.98 × 85.60 mm (CR80 portrait).
+    Exports are 2422 × 3840 px.
+
+    <br><br>
+
+    <strong>Important:</strong>
+    A Press ID and verification code are generated only after the required
+    member details have been entered.
+
+    <br><br>
+
+    Each member record can generate only one Press ID.
+    Once generated, the Press ID and verification code cannot be regenerated
+    or manually changed.
+
+    <br><br>
+
+    Registry status is limited to:
+    <strong>active</strong> or <strong>inactive</strong>.
+
+    <br><br>
+
+    Duplicate entries are flagged in the registry. The future Google Sheets
+    API should be treated as the final authority for duplicate checking across
+    different browsers and devices.
+
+  </div>
+
+</section>
+
+
+<!-- ============================================================
+     PREVIEW
+============================================================ -->
+
+<section class="panel preview-panel">
+
+  <div class="preview-head">
+
+    <div>
+
+      <h2>Press ID Preview</h2>
+
+      <span>
+        Portrait format • Front + Back
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <div class="cards">
+
+
+    <!-- FRONT -->
+
+    <div class="card-wrap">
+
+      <div class="card-label">
+        Front
+      </div>
+
+      <div
+        class="id-card front"
+        id="frontCard"
+      >
+
+        <div class="front-top">
+
+          <div class="branding">
+
+            <img
+              class="branding-logo"
+              src="jourknows-logo-transparent-centered.png"
+              alt="JourKnows PH"
+            >
+
+          </div>
+
+          <div class="press-title">
+            PRESS IDENTIFICATION
+          </div>
+
+        </div>
+
+
+        <div class="photo-area">
+
+          <img
+            class="photo"
+            id="photo"
+            alt="Member photo"
+            style="display:none"
+          >
+
+          <div
+            class="placeholder"
+            id="placeholder"
+          >
+            MEMBER<br>PHOTO
+          </div>
+
+        </div>
+
+
+        <div class="info">
+
+          <div
+            class="name"
+            id="namePreview"
+          >
+            MEMBER NAME
+          </div>
+
+          <div
+            class="role"
+            id="rolePreview"
+          >
+            POSITION / ROLE
+          </div>
+
+          <div
+            class="desk"
+            id="deskPreview"
+          >
+            DEPARTMENT / DESK
+          </div>
+
+        </div>
+
+
+        <div class="press-stamp">
+
+          <div class="press-word">
+            PRESS
+          </div>
+
+          <div class="press-sub">
+            Official Media Identification
+          </div>
+
+        </div>
+
+
+        <div class="front-footer">
+          JOURNALISM IS FOR ALL
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- BACK -->
+
+    <div class="card-wrap">
+
+      <div class="card-label">
+        Back
+      </div>
+
+      <div
+        class="id-card back"
+        id="backCard"
+      >
+
+        <div class="back-top"></div>
+
+
+        <div class="back-brand">
+
+          <img
+            class="back-brand-logo"
+            src="jourknows-logo-transparent-centered.png"
+            alt="JourKnows PH"
+          >
+
+        </div>
+
+
+        <div class="detail-box-back">
+
+          <div class="detail">
+
+            <small>
+              Press ID No.
+            </small>
+
+            <strong id="idPreview">
+              LOCKED
+            </strong>
+
+          </div>
+
+
+          <div class="detail">
+
+            <small>
+              Validity
+            </small>
+
+            <strong id="validityPreview">
+              Validity Period
+            </strong>
+
+          </div>
+
+
+          <div class="detail">
+
+            <small>
+              Organization
+            </small>
+
+            <strong>
+              JourKnows PH
+            </strong>
+
+          </div>
+
+
+          <div class="detail">
+
+            <small>
+              Status
+            </small>
+
+            <strong id="statusPreview">
+              ACTIVE
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="back-content">
+
+          <div
+            class="qr locked-qr"
+            id="qr"
+          >
+
+            <div class="qr-lock">
+
+              <strong>
+                QR LOCKED
+              </strong>
+
+              <span>
+                Generate Press ID after<br>
+                completing the details.
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="verify-title">
+            Member Verification
+          </div>
+
+          <div class="back-rule"></div>
+
+
+          <div class="verify-copy">
+
+            Scan this QR code to verify the identity and
+            current affiliation of the bearer with JourKnows PH.
+
+          </div>
+
+
+          <div
+            class="verify-code"
+            id="verifyCodePreview"
+          >
+            CODE: LOCKED
+          </div>
+
+        </div>
+
+
+        <div class="back-disclaimer">
+
+          This card is issued for authorized journalistic,
+          reporting, production, and organizational activities.
+          It remains the property of JourKnows PH and may be
+          invalidated when the holder is no longer authorized
+          to represent the organization.
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+</div>
+</main>
+
+
+<script>
+
+/* ============================================================
+   CONFIGURATION
+============================================================ */
+
+/*
+ * WHEN YOUR GOOGLE SHEETS API IS READY:
+ *
+ * Put your deployed Google Apps Script Web App URL here.
+ *
+ * Example:
+ *
+ * const GOOGLE_SHEETS_API =
+ *   "https://script.google.com/macros/s/XXXXXXXX/exec";
+ *
+ * Leave it blank for now if the API has not been deployed.
+ */
+
+const GOOGLE_SHEETS_API = "https://script.google.com/macros/s/AKfycbxyZlrEQOY7wOavz4U0wO-EYo0L95taAGBRB6DbDmETZiQCaPnQSjHvrM2NFg5588rUvg/exec";
+
+
+/*
+ * Local storage keys.
+ */
+
+const KEY = "jourknows_portrait_press_id_v2";
+
+const REG_KEY = "jourknows_registry_v2";
+
+
+/*
+ * Export dimensions.
+ */
+
+const OUT_W = 2422;
+const OUT_H = 3840;
+
+const STAGE_W = 319;
+const STAGE_H = 319 * 85.6 / 53.98;
+
+
+/* ============================================================
+   GLOBAL STATE
+============================================================ */
+
+let photoData = null;
+
+let photoPos = {
+  x:50,
+  y:50
+};
+
+let verifyCode = null;
+
+
+/*
+ * IMPORTANT:
+ *
+ * idGenerated becomes true only after a Press ID
+ * and verification code have actually been issued.
+ */
+
+let idGenerated = false;
+
+
+/*
+ * Once true, this record may never generate another ID.
+ */
+
+let generationLocked = false;
+
+
+/*
+ * Duplicate state returned by the backend.
+ */
+
+let duplicateFlag = false;
+
+let duplicateReason = "";
+
+
+/*
+ * Prevents excessive registry synchronization.
+ */
+
+let syncTimer = null;
+
+
+/*
+ * Photo thumbnail cache.
+ */
+
+let thumbCache = {
+  key:null,
+  val:""
+};
+
+
+/*
+ * Optional Claude download capability.
+ */
+
+let _downloads = null;
+
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+const $ = id => document.getElementById(id);
+
+
+function genVerifyCode(len=10){
+
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  const arr =
+    new Uint32Array(len);
+
+  (
+    window.crypto ||
+    window.msCrypto
+  ).getRandomValues(arr);
+
+  let out = "";
+
+  for(let i=0;i<len;i++){
+
+    out += chars[
+      arr[i] % chars.length
+    ];
+
+  }
+
+  return out;
+}
+
+
+/*
+ * Generates a six-digit Press ID.
+ */
+
+function genPressId(){
+
+  return "JK-PRESS-" +
+    Math.floor(
+      100000 +
+      Math.random() * 900000
+    );
+
+}
+
+
+/*
+ * Card display name:
+ * first name + last name only.
+ */
+
+function firstLastName(full){
+
+  const parts =
+    full
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+  if(!parts.length){
+    return "MEMBER NAME";
+  }
+
+  if(parts.length === 1){
+    return parts[0].toUpperCase();
+  }
+
+  return (
+    parts[0] +
+    " " +
+    parts[parts.length - 1]
+  ).toUpperCase();
+
+}
+
+
+/*
+ * Registry version:
+ * first name + last name only,
+ * original casing.
+ */
+
+function nameForRegistry(full){
+
+  const parts =
+    (full || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+  if(!parts.length){
+    return "";
+  }
+
+  if(parts.length === 1){
+    return parts[0];
+  }
+
+  return (
+    parts[0] +
+    " " +
+    parts[parts.length - 1]
+  );
+
+}
+
+
+/*
+ * Normalize text for duplicate checking.
+ */
+
+function normalize(value){
+
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ");
+
+}
+
+
+/*
+ * Required details.
+ */
+
+function hasRequiredDetails(){
+
+  return Boolean(
+    $("fullName").value.trim() &&
+    $("position").value.trim() &&
+    $("department").value.trim()
+  );
+
+}
+
+
+/* ============================================================
+   NAME FITTING
+============================================================ */
+
+function nameFontPx(text,cardW){
+
+  const k =
+    cardW / STAGE_W;
+
+  const p =
+    document.createElement("span");
+
+  p.style.cssText =
+    "position:absolute;" +
+    "visibility:hidden;" +
+    "white-space:nowrap;" +
+    "font-family:'Poppins',Arial,sans-serif;" +
+    "font-weight:900;" +
+    "text-transform:uppercase;" +
+    "font-size:100px;" +
+    "line-height:1";
+
+  p.textContent = text;
+
+  document.body.appendChild(p);
+
+  const w =
+    p.getBoundingClientRect().width || 1;
+
+  p.remove();
+
+  return Math.max(
+    12 * k,
+    Math.min(
+      28 * k,
+      100 * cardW * 0.82 / w
+    )
+  );
+
+}
+
+
+function fitName(){
+
+  const n =
+    $("namePreview");
+
+  n.style.fontSize =
+    nameFontPx(
+      n.textContent,
+      $("frontCard").clientWidth
+    ) + "px";
+
+}
+
+
+/* ============================================================
+   DATE / VALIDITY
+============================================================ */
+
+function fmtDate(v){
+
+  if(!v){
+    return "";
+  }
+
+  return new Date(
+    v + "T00:00:00"
+  ).toLocaleDateString(
+    "en-PH",
+    {
+      month:"short",
+      day:"numeric",
+      year:"numeric"
+    }
+  );
+
+}
+
+
+function validity(){
+
+  const a =
+    fmtDate(
+      $("validFrom").value
+    );
+
+  const b =
+    fmtDate(
+      $("validUntil").value
+    );
+
+  if(!a && !b){
+    return "Validity Period";
+  }
+
+  if(a && b){
+    return `${a} – ${b}`;
+  }
+
+  return a
+    ? `From ${a}`
+    : `Until ${b}`;
+
+}
+
+
+/* ============================================================
+   VERIFICATION URL / QR
+============================================================ */
+
+function verificationURL(){
+
+  let base =
+    $("verificationBase")
+      .value
+      .trim();
+
+  if(!base){
+    base =
+      "https://jourknows-verify-press-id.vercel.app/";
+  }
+
+  if(!base.endsWith("/")){
+    base += "/";
+  }
+
+  return (
+    base +
+    encodeURIComponent(
+      verifyCode || "LOCKED"
+    )
+  );
+
+}
+
+
+function makeQR(){
+
+  if(!idGenerated || !verifyCode){
+
+    $("qr").innerHTML = `
+      <div class="qr-lock">
+        <strong>QR LOCKED</strong>
+        <span>
+          Generate Press ID after<br>
+          completing the details.
+        </span>
+      </div>
+    `;
+
+    $("qr").classList.add("locked-qr");
+
+    $("verifyCodePreview").textContent =
+      "CODE: LOCKED";
+
+    return;
+  }
+
+
+  $("qr").innerHTML = "";
+
+  $("qr").classList.remove(
+    "locked-qr"
+  );
+
+
+  new QRCode(
+    $("qr"),
+    {
+      text:verificationURL(),
+      width:300,
+      height:300,
+      colorDark:"#000E4B",
+      colorLight:"#ffffff",
+      correctLevel:
+        QRCode.CorrectLevel.H
+    }
+  );
+
+
+  $("verifyCodePreview").textContent =
+    "CODE: " + verifyCode;
+
+}
+
+
+/*
+ * High-resolution QR for export.
+ */
+
+function qrDataURL(size){
+
+  if(!idGenerated || !verifyCode){
+    return null;
+  }
+
+  const tmp =
+    document.createElement("div");
+
+  new QRCode(
+    tmp,
+    {
+      text:verificationURL(),
+      width:size,
+      height:size,
+      colorDark:"#000E4B",
+      colorLight:"#ffffff",
+      correctLevel:
+        QRCode.CorrectLevel.H
+    }
+  );
+
+  const canvas =
+    tmp.querySelector("canvas");
+
+  return canvas
+    ? canvas.toDataURL("image/png")
+    : null;
+
+}
+
+
+/* ============================================================
+   UI UPDATE
+============================================================ */
+
+function updateGenerationState(){
+
+  const button =
+    $("generateId");
+
+  const box =
+    $("generationStatus");
+
+
+  /*
+   * Already generated:
+   */
+
+  if(
+    generationLocked ||
+    idGenerated ||
+    verifyCode
+  ){
+
+    button.disabled = true;
+
+    button.textContent =
+      "Generated";
+
+    button.classList.remove(
+      "secondary"
+    );
+
+    button.classList.add(
+      "dark"
+    );
+
+    box.className =
+      "generation-status locked";
+
+    box.textContent =
+      "This Press ID has already been generated and cannot be regenerated.";
+
+    $("pressId").readOnly = true;
+
+    return;
+  }
+
+
+  /*
+   * Not generated yet.
+   */
+
+  const complete =
+    hasRequiredDetails();
+
+
+  button.disabled =
+    !complete;
+
+
+  button.textContent =
+    "Generate";
+
+
+  button.classList.remove(
+    "dark"
+  );
+
+  button.classList.add(
+    "secondary"
+  );
+
+
+  if(complete){
+
+    box.className =
+      "generation-status ready";
+
+    box.textContent =
+      "Basic details complete. You may now generate the Press ID.";
+
+  }else{
+
+    box.className =
+      "generation-status";
+
+    box.textContent =
+      "Enter the full name, position/role, and department before generating.";
+
+  }
+
+}
+
+
+/*
+ * Main UI update.
+ */
+
+function update(){
+
+  $("namePreview").textContent =
+    firstLastName(
+      $("fullName").value
+    );
+
+  fitName();
+
+
+  $("rolePreview").textContent =
+    $("position")
+      .value
+      .trim()
+      .toUpperCase()
+    ||
+    "POSITION / ROLE";
+
+
+  $("deskPreview").textContent =
+    $("department")
+      .value
+      .toUpperCase()
+    ||
+    "DEPARTMENT / DESK";
+
+
+  if(
+    idGenerated &&
+    $("pressId").value.trim()
+  ){
+
+    $("idPreview").textContent =
+      $("pressId").value.trim();
+
+  }else{
+
+    $("idPreview").textContent =
+      "LOCKED";
+
+  }
+
+
+  $("validityPreview").textContent =
+    validity();
+
+
+  $("statusPreview").textContent =
+    "ACTIVE";
+
+
+  $("photo").style.objectPosition =
+    `${photoPos.x}% ${photoPos.y}%`;
+
+
+  makeQR();
+
+  updateGenerationState();
+
+  saveDraft();
+
+}
+
+
+/* ============================================================
+   LOCAL DRAFT
+============================================================ */
+
+function saveDraft(){
+
+  const data = {
+
+    fullName:
+      $("fullName").value,
+
+    position:
+      $("position").value,
+
+    department:
+      $("department").value,
+
+    pressId:
+      idGenerated
+        ? $("pressId").value
+        : "",
+
+    validFrom:
+      $("validFrom").value,
+
+    validUntil:
+      $("validUntil").value,
+
+    verificationBase:
+      $("verificationBase").value,
+
+    photoData,
+
+    photoPos,
+
+    verifyCode:
+      idGenerated
+        ? verifyCode
+        : null,
+
+    idGenerated,
+
+    generationLocked,
+
+    duplicateFlag,
+
+    duplicateReason,
+
+    /*
+     * Status is ONLY active/inactive.
+     */
+
+    status:"active"
+
+  };
+
+
+  try{
+
+    localStorage.setItem(
+      KEY,
+      JSON.stringify(data)
+    );
+
+    $("status").textContent =
+      idGenerated
+        ? "● Press ID active"
+        : "● Awaiting member details";
+
+  }catch(e){
+
+    $("status").textContent =
+      "● Draft could not be saved";
+
+  }
+
+}
+
+
+/* ============================================================
+   LOCAL REGISTRY
+============================================================ */
+
+function localReg(){
+
+  try{
+
+    return (
+      JSON.parse(
+        localStorage.getItem(REG_KEY) ||
+        "{}"
+      ) || {}
+    );
+
+  }catch(e){
+
+    return {};
+
+  }
+
+}
+
+
+function localRegistrySet(
+  id,
+  record
+){
+
+  const registry =
+    localReg();
+
+  registry[id] =
+    record;
+
+  localStorage.setItem(
+    REG_KEY,
+    JSON.stringify(registry)
+  );
+
+}
+
+
+function localRegistryGet(
+  id
+){
+
+  return localReg()[id] || null;
+
+}
+
+
+function localRegistryAll(){
+
+  return Object.values(
+    localReg()
+  );
+
+}
+
+
+/* ============================================================
+   PHOTO
+============================================================ */
+
+function applyPhoto(){
+
+  if(!photoData){
+
+    $("photo").style.display =
+      "none";
+
+    $("placeholder").style.display =
+      "grid";
+
+    $("photoControls").style.display =
+      "none";
+
+    return;
+  }
+
+
+  $("photo").src =
+    photoData;
+
+  $("photo").style.display =
+    "block";
+
+  $("placeholder").style.display =
+    "none";
+
+  $("photoControls").style.display =
+    "grid";
+
+  $("photo").style.objectPosition =
+    `${photoPos.x}% ${photoPos.y}%`;
+
+}
+
+
+/*
+ * Shrink large uploaded images.
+ */
+
+async function shrinkPhoto(
+  url,
+  max=1400
+){
+
+  try{
+
+    const img =
+      await new Promise(
+        (resolve,reject)=>{
+
+          const i =
+            new Image();
+
+          i.onload =
+            () => resolve(i);
+
+          i.onerror =
+            reject;
+
+          i.src =
+            url;
+
+        }
+      );
+
+
+    const big =
+      Math.max(
+        img.naturalWidth,
+        img.naturalHeight
+      );
+
+
+    if(big <= max){
+      return url;
+    }
+
+
+    const k =
+      max / big;
+
+    const c =
+      document.createElement(
+        "canvas"
+      );
+
+    c.width =
+      Math.round(
+        img.naturalWidth * k
+      );
+
+    c.height =
+      Math.round(
+        img.naturalHeight * k
+      );
+
+
+    const ctx =
+      c.getContext("2d");
+
+    ctx.imageSmoothingQuality =
+      "high";
+
+    ctx.fillStyle =
+      "#ffffff";
+
+    ctx.fillRect(
+      0,
+      0,
+      c.width,
+      c.height
+    );
+
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      c.width,
+      c.height
+    );
+
+
+    return c.toDataURL(
+      "image/jpeg",
+      .9
+    );
+
+  }catch(e){
+
+    return url;
+
+  }
+
+}
+
+
+/* ============================================================
+   PHOTO THUMBNAIL
+============================================================ */
+
+async function makeThumb(){
+
+  if(!photoData){
+    return "";
+  }
+
+
+  const key =
+    photoData.length +
+    ":" +
+    photoData.slice(-64) +
+    ":" +
+    photoPos.x +
+    ":" +
+    photoPos.y;
+
+
+  if(
+    thumbCache.key === key
+  ){
+
+    return thumbCache.val;
+
+  }
+
+
+  const img =
+    await new Promise(
+      (resolve,reject)=>{
+
+        const i =
+          new Image();
+
+        i.onload =
+          () => resolve(i);
+
+        i.onerror =
+          reject;
+
+        i.src =
+          photoData;
+
+      }
+    );
+
+
+  const S = 192;
+
+  const c =
+    document.createElement(
+      "canvas"
+    );
+
+  c.width =
+    c.height =
+      S;
+
+
+  const ctx =
+    c.getContext("2d");
+
+  const side =
+    Math.min(
+      img.naturalWidth,
+      img.naturalHeight
+    );
+
+
+  const sx =
+    (
+      img.naturalWidth -
+      side
+    ) *
+    photoPos.x /
+    100;
+
+
+  const sy =
+    (
+      img.naturalHeight -
+      side
+    ) *
+    photoPos.y /
+    100;
+
+
+  ctx.imageSmoothingQuality =
+    "high";
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.fillRect(
+    0,
+    0,
+    S,
+    S
+  );
+
+
+  ctx.drawImage(
+    img,
+    sx,
+    sy,
+    side,
+    side,
+    0,
+    0,
+    S,
+    S
+  );
+
+
+  const val =
+    c.toDataURL(
+      "image/jpeg",
+      .72
+    );
+
+
+  thumbCache = {
+    key,
+    val
+  };
+
+
+  return val;
+
+}
+
+
+/* ============================================================
+   BACKEND DUPLICATE CHECK
+============================================================ */
+
+/*
+ * This is the future Google Sheets API integration point.
+ *
+ * Expected response:
+ *
+ * {
+ *   "ok": true,
+ *   "duplicate": false
+ * }
+ *
+ * OR:
+ *
+ * {
+ *   "ok": true,
+ *   "duplicate": true,
+ *   "reason": "Matching full name and department"
+ * }
+ */
+
+async function backendCheckDuplicate(){
+
+  if(!GOOGLE_SHEETS_API){
+
+    /*
+     * API not installed yet.
+     *
+     * Local registry check is only a temporary fallback.
+     */
+
+    const currentName =
+      normalize(
+        nameForRegistry(
+          $("fullName").value
+        )
+      );
+
+    const currentDepartment =
+      normalize(
+        $("department").value
+      );
+
+
+    const currentPosition =
+      normalize(
+        $("position").value
+      );
+
+
+    const records =
+      localRegistryAll();
+
+
+    const duplicate =
+      records.some(record => {
+
+        if(
+          !record ||
+          record.status !== "active"
+        ){
+          return false;
+        }
+
+
+        return (
+          normalize(
+            record.holderName
+          ) === currentName
+          &&
+          normalize(
+            record.department
+          ) === currentDepartment
+          &&
+          normalize(
+            record.position
+          ) === currentPosition
+        );
+
+      });
+
+
+    if(duplicate){
+
+      return {
+        ok:true,
+        duplicate:true,
+        reason:
+          "Matching name, position, and department"
+      };
+
+    }
+
+
+    return {
+      ok:true,
+      duplicate:false
+    };
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        GOOGLE_SHEETS_API,
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body:JSON.stringify({
+
+            action:
+              "checkDuplicate",
+
+            fullName:
+              nameForRegistry(
+                $("fullName").value
+              ),
+
+            position:
+              $("position")
+                .value
+                .trim(),
+
+            department:
+              $("department")
+                .value,
+
+            status:
+              "active"
+
+          })
+
+        }
+      );
+
+
+    if(!response.ok){
+
+      return {
+        ok:false,
+        duplicate:false,
+        reason:
+          "Backend request failed"
+      };
+
+    }
+
+
+    return await response.json();
+
+  }catch(error){
+
+    console.error(
+      "Backend duplicate check failed:",
+      error
+    );
+
+
+    return {
+      ok:false,
+      duplicate:false,
+      reason:
+        "Backend unavailable"
+    };
+
+  }
+
+}
+
+
+/* ============================================================
+   BACKEND ISSUE REQUEST
+============================================================ */
+
+/*
+ * After the duplicate check passes, the generated record can
+ * be sent to Google Sheets.
+ */
+
+async function sendToBackend(record){
+
+  if(!GOOGLE_SHEETS_API){
+
+    /*
+     * Backend not connected yet.
+     * Save locally for now.
+     */
+
+    localRegistrySet(
+      record.pressId,
+      record
+    );
+
+    return {
+      ok:true,
+      local:true
+    };
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        GOOGLE_SHEETS_API,
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body:JSON.stringify({
+
+            action:
+              "issuePressId",
+
+            ...record
+
+          })
+
+        }
+      );
+
+
+    if(!response.ok){
+
+      return {
+        ok:false,
+        reason:
+          "Backend rejected request"
+      };
+
+    }
+
+
+    return await response.json();
+
+  }catch(error){
+
+    console.error(
+      "Backend issue request failed:",
+      error
+    );
+
+
+    return {
+      ok:false,
+      reason:
+        "Backend unavailable"
+    };
+
+  }
+
+}
+
+
+/* ============================================================
+   BUILD REGISTRY RECORD
+============================================================ */
+
+async function buildRegistryRecord(){
+
+  let photo = "";
+
+  try{
+
+    photo =
+      await makeThumb();
+
+  }catch(e){
+
+    console.warn(
+      "Photo thumbnail failed:",
+      e
+    );
+
+  }
+
+
+  return {
+
+    pressId:
+      $("pressId")
+        .value
+        .trim(),
+
+    verifyCode,
+
+    holderName:
+      nameForRegistry(
+        $("fullName").value
+      ),
+
+    position:
+      $("position")
+        .value
+        .trim(),
+
+    department:
+      $("department")
+        .value,
+
+    validFrom:
+      $("validFrom")
+        .value,
+
+    validUntil:
+      $("validUntil")
+        .value,
+
+    photo,
+
+    /*
+     * ONLY active/inactive.
+     */
+
+    status:
+      "active",
+
+    /*
+     * Duplicate information.
+     */
+
+    duplicate:
+      duplicateFlag,
+
+    duplicateReason:
+      duplicateReason,
+
+    issuedAt:
+      new Date().toISOString()
+
+  };
+
+}
+
+
+/* ============================================================
+   ONE-TIME ID GENERATION
+============================================================ */
+
+async function generateId(){
+
+  /*
+   * HARD LOCK
+   */
+
+  if(
+    generationLocked ||
+    idGenerated ||
+    verifyCode
+  ){
+
+    alert(
+      "This Press ID has already been generated and cannot be regenerated."
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * Required fields.
+   */
+
+  if(!hasRequiredDetails()){
+
+    alert(
+      "Please complete the full name, position/role, and department first."
+    );
+
+    return;
+
+  }
+
+
+  const button =
+    $("generateId");
+
+  const old =
+    button.textContent;
+
+
+  button.disabled =
+    true;
+
+  button.textContent =
+    "Checking...";
+
+
+  /*
+   * FIRST:
+   * Ask the backend whether the member already exists.
+   */
+
+  const duplicateResult =
+    await backendCheckDuplicate();
+
+
+  /*
+   * If the backend itself is unavailable,
+   * do not issue an ID.
+   */
+
+  if(
+    !duplicateResult.ok &&
+    GOOGLE_SHEETS_API
+  ){
+
+    alert(
+      "The JourKnows registry could not be reached. No Press ID was generated. Please try again."
+    );
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      old;
+
+    updateGenerationState();
+
+    return;
+
+  }
+
+
+  /*
+   * Duplicate detected.
+   */
+
+  if(
+    duplicateResult.duplicate
+  ){
+
+    duplicateFlag =
+      true;
+
+    duplicateReason =
+      duplicateResult.reason ||
+      "Existing matching member record";
+
+
+    $("duplicateWarning")
+      .classList
+      .add("show");
+
+
+    $("duplicateWarning").textContent =
+      "Duplicate entry detected: " +
+      duplicateReason +
+      ". No new Press ID was generated.";
+
+
+    $("status").textContent =
+      "● Duplicate entry detected";
+
+
+    button.disabled =
+      true;
+
+    button.textContent =
+      "Duplicate";
+
+    return;
+
+  }
+
+
+  /*
+   * Generate ID exactly once.
+   */
+
+  button.textContent =
+    "Generating...";
+
+
+  let candidateId = null;
+
+  let attempts = 0;
+
+
+  /*
+   * Temporary local uniqueness check.
+   * Google Sheets should provide the authoritative
+   * cross-device uniqueness check.
+   */
+
+  do{
+
+    candidateId =
+      genPressId();
+
+    attempts++;
+
+  }while(
+    localRegistryGet(candidateId) &&
+    attempts < 20
+  );
+
+
+  if(
+    localRegistryGet(candidateId)
+  ){
+
+    alert(
+      "A unique Press ID could not be created. Please try again."
+    );
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      old;
+
+    return;
+
+  }
+
+
+  const candidateCode =
+    genVerifyCode();
+
+
+  /*
+   * Assign the values ONCE.
+   */
+
+  $("pressId").value =
+    candidateId;
+
+  verifyCode =
+    candidateCode;
+
+
+  idGenerated =
+    true;
+
+  generationLocked =
+    true;
+
+
+  /*
+   * Lock the ID input permanently.
+   */
+
+  $("pressId").readOnly =
+    true;
+
+
+  /*
+   * Update UI.
+   */
+
+  duplicateFlag =
+    false;
+
+  duplicateReason =
+    "";
+
+
+  $("duplicateWarning")
+    .classList
+    .remove("show");
+
+
+  update();
+
+
+  /*
+   * Build the complete registry record.
+   */
+
+  const record =
+    await buildRegistryRecord();
+
+
+  /*
+   * Send to backend / local registry.
+   */
+
+  button.textContent =
+    "Saving...";
+
+
+  const backendResult =
+    await sendToBackend(record);
+
+
+  if(
+    !backendResult.ok
+  ){
+
+    /*
+     * IMPORTANT:
+     *
+     * If the actual Google Sheets backend rejected
+     * the record, don't pretend that it was registered.
+     */
+
+    alert(
+      "The Press ID was generated locally, but the registry could not confirm it. Please contact the JourKnows administrator before issuing this card."
+    );
+
+    $("status").textContent =
+      "● Registry confirmation required";
+
+  }else{
+
+    $("status").textContent =
+      "● Press ID active";
+
+  }
+
+
+  button.disabled =
+    true;
+
+  button.textContent =
+    "Generated";
+
+
+  saveDraft();
+
+}
+
+
+/* ============================================================
+   REGISTRY SYNC
+============================================================ */
+
+async function syncRecord(){
+
+  if(
+    !idGenerated ||
+    !verifyCode ||
+    !$("pressId").value.trim()
+  ){
+
+    return {
+      ok:false,
+      reason:"incomplete"
+    };
+
+  }
+
+
+  try{
+
+    const record =
+      await buildRegistryRecord();
+
+
+    /*
+     * Local registry.
+     */
+
+    localRegistrySet(
+      record.pressId,
+      record
+    );
+
+
+    /*
+     * If backend is configured,
+     * update the record there too.
+     */
+
+    if(GOOGLE_SHEETS_API){
+
+      const response =
+        await fetch(
+          GOOGLE_SHEETS_API,
+          {
+            method:"POST",
+
+            headers:{
+              "Content-Type":
+                "text/plain;charset=utf-8"
+            },
+
+            body:JSON.stringify({
+
+              action:
+                "updatePressId",
+
+              ...record
+
+            })
+
+          }
+        );
+
+
+      if(!response.ok){
+
+        return {
+          ok:false,
+          reason:"backend"
+        };
+
+      }
+
+    }
+
+
+    return {
+      ok:true
+    };
+
+  }catch(error){
+
+    console.error(
+      "Registry sync failed:",
+      error
+    );
+
+    return {
+      ok:false,
+      reason:"error"
+    };
+
+  }
+
+}
+
+
+function scheduleSync(){
+
+  if(!idGenerated){
+    return;
+  }
+
+
+  clearTimeout(
+    syncTimer
+  );
+
+
+  syncTimer =
+    setTimeout(
+      async()=>{
+
+        const result =
+          await syncRecord();
+
+
+        if(result.ok){
+
+          $("status").textContent =
+            "● Press ID active";
+
+        }
+
+      },
+      900
+    );
+
+}
+
+
+/* ============================================================
+   FINALIZE
+============================================================ */
+
+async function finalizeRecord(){
+
+  if(!idGenerated || !verifyCode){
+
+    alert(
+      "Generate the Press ID first."
+    );
+
+    return false;
+
+  }
+
+
+  if(!hasRequiredDetails()){
+
+    alert(
+      "The required member details are incomplete."
+    );
+
+    return false;
+
+  }
+
+
+  clearTimeout(
+    syncTimer
+  );
+
+
+  const result =
+    await syncRecord();
+
+
+  if(result.ok){
+
+    $("status").textContent =
+      "● Press ID active";
+
+    return true;
+
+  }
+
+
+  alert(
+    "The registry could not be updated. Please try again before exporting the card."
+  );
+
+  return false;
+
+}
+
+
+/* ============================================================
+   PHOTO EVENTS
+============================================================ */
+
+$("photoInput")
+  .addEventListener(
+    "change",
+    event => {
+
+      const file =
+        event.target.files[0];
+
+      if(!file){
+        return;
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        async ev => {
+
+          photoData =
+            await shrinkPhoto(
+              ev.target.result
+            );
+
+          photoPos = {
+            x:50,
+            y:50
+          };
+
+
+          applyPhoto();
+
+          update();
+
+        };
+
+
+      reader.readAsDataURL(
+        file
+      );
+
+    }
+  );
+
+
+function movePhoto(dx,dy){
+
+  photoPos.x =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        photoPos.x + dx
+      )
+    );
+
+
+  photoPos.y =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        photoPos.y + dy
+      )
+    );
+
+
+  applyPhoto();
+
+  saveDraft();
+
+  scheduleSync();
+
+}
+
+
+$("up").onclick =
+  () => movePhoto(0,-5);
+
+$("down").onclick =
+  () => movePhoto(0,5);
+
+$("left").onclick =
+  () => movePhoto(-5,0);
+
+$("right").onclick =
+  () => movePhoto(5,0);
+
+
+$("resetPhoto").onclick =
+  () => {
+
+    photoPos = {
+      x:50,
+      y:50
+    };
+
+    applyPhoto();
+
+    saveDraft();
+
+    scheduleSync();
+
+  };
+
+
+/* ============================================================
+   FORM EVENTS
+============================================================ */
+
+[
+  "fullName",
+  "position",
+  "department",
+  "validFrom",
+  "validUntil",
+  "verificationBase"
+].forEach(id => {
+
+  $(id).addEventListener(
+    "input",
+    update
+  );
+
+  $(id).addEventListener(
+    "change",
+    update
+  );
+
+});
+
+
+$("generateId")
+  .onclick =
+  generateId;
+
+
+/* ============================================================
+   SAVE BUTTON
+============================================================ */
+
+$("save").onclick =
+  async function(){
+
+    saveDraft();
+
+    if(idGenerated){
+
+      await syncRecord();
+
+    }
+
+
+    const old =
+      this.textContent;
+
+    this.textContent =
+      "Saved ✓";
+
+
+    setTimeout(
+      () => {
+        this.textContent =
+          old;
+      },
+      1200
+    );
+
+  };
+
+
+/* ============================================================
+   PRINT
+============================================================ */
+
+$("print").onclick =
+  async () => {
+
+    if(
+      await finalizeRecord()
+    ){
+
+      window.print();
+
+    }
+
+  };
+
+
+/* ============================================================
+   EXPORT REGISTRY
+============================================================ */
+
+$("exportRegistry")
+  .onclick =
+  async function(){
+
+    const old =
+      this.textContent;
+
+
+    this.textContent =
+      "Exporting...";
+
+    this.disabled =
+      true;
+
+
+    try{
+
+      if(idGenerated){
+
+        await syncRecord();
+
+      }
+
+
+      /*
+       * Only active/inactive records are exported.
+       */
+
+      const records =
+        localRegistryAll()
+          .filter(
+            record =>
+              record &&
+              (
+                record.status === "active" ||
+                record.status === "inactive"
+              )
+          );
+
+
+      if(!records.length){
+
+        alert(
+          "No issued Press IDs are available yet."
+        );
+
+      }else{
+
+        await offerDownload(
+          "data.json",
+          new Blob(
+            [
+              JSON.stringify(
+                records,
+                null,
+                2
+              )
+            ],
+            {
+              type:
+                "application/json"
+            }
+          )
+        );
+
+      }
+
+    }catch(error){
+
+      console.error(
+        error
+      );
+
+      alert(
+        "Export failed. Please try again."
+      );
+
+    }
+
+
+    this.disabled =
+      false;
+
+    this.textContent =
+      old;
+
+  };
+
+
+/* ============================================================
+   IMPORT REGISTRY
+============================================================ */
+
+$("importRegistry")
+  .onclick =
+  () => {
+
+    $("importFile")
+      .click();
+
+  };
+
+
+$("importFile")
+  .addEventListener(
+    "change",
+    async event => {
+
+      const file =
+        event.target.files[0];
+
+      event.target.value =
+        "";
+
+      if(!file){
+        return;
+      }
+
+
+      try{
+
+        const list =
+          JSON.parse(
+            await file.text()
+          );
+
+
+        if(!Array.isArray(list)){
+
+          throw new Error(
+            "Not an array"
+          );
+
+        }
+
+
+        let added = 0;
+
+
+        for(
+          const record of list
+        ){
+
+          if(
+            !record ||
+            !record.pressId ||
+            !record.verifyCode
+          ){
+
+            continue;
+
+          }
+
+
+          /*
+           * Only active/inactive status is allowed.
+           */
+
+          const status =
+            record.status === "inactive"
+              ? "inactive"
+              : "active";
+
+
+          localRegistrySet(
+            record.pressId,
+            {
+              ...record,
+              status
+            }
+          );
+
+
+          added++;
+
+        }
+
+
+        alert(
+          `Imported ${added} card${added === 1 ? "" : "s"} from ${file.name}.`
+        );
+
+
+      }catch(error){
+
+        console.error(
+          error
+        );
+
+        alert(
+          "That file isn't a valid JourKnows Press ID registry."
+        );
+
+      }
+
+    }
+  );
+
+
+/* ============================================================
+   RESET
+============================================================ */
+
+$("reset").onclick =
+  () => {
+
+    if(
+      !confirm(
+        "Reset the current Press ID draft? This will remove the saved information from this browser."
+      )
+    ){
+
+      return;
+
+    }
+
+
+    localStorage.removeItem(
+      KEY
+    );
+
+
+    location.reload();
+
+  };
+
+
+/* ============================================================
+   EXPORT CARD CANVAS
+============================================================ */
+
+async function cardCanvas(
+  element,
+  square=false
+){
+
+  await document.fonts.ready;
+
+
+  const id =
+    element.id;
+
+
+  const nameSize =
+    nameFontPx(
+      $("namePreview").textContent,
+      STAGE_W
+    );
+
+
+  const qrURL =
+    id === "backCard"
+      ? qrDataURL(1024)
+      : null;
+
+
+  if(
+    id === "backCard" &&
+    !qrURL
+  ){
+
+    throw new Error(
+      "QR not generated"
+    );
+
+  }
+
+
+  const raw =
+    await html2canvas(
+      element,
+      {
+
+        scale:
+          OUT_H / STAGE_H,
+
+        useCORS:
+          true,
+
+        backgroundColor:
+          square
+            ? "#ffffff"
+            : null,
+
+        logging:
+          false,
+
+        imageTimeout:
+          0,
+
+        onclone:
+          doc => {
+
+            const card =
+              doc.getElementById(
+                id
+              );
+
+
+            card.parentElement.style.width =
+              STAGE_W + "px";
+
+
+            Object.assign(
+              card.style,
+              {
+                width:
+                  STAGE_W + "px",
+
+                height:
+                  STAGE_H + "px",
+
+                aspectRatio:
+                  "auto",
+
+                boxShadow:
+                  "none"
+              }
+            );
+
+
+            if(square){
+
+              card.style.borderRadius =
+                "0";
+
+            }
+
+
+            const n =
+              doc.getElementById(
+                "namePreview"
+              );
+
+
+            if(n){
+
+              n.style.fontSize =
+                nameSize + "px";
+
+            }
+
+
+            if(qrURL){
+
+              const qr =
+                card.querySelector(
+                  ".qr"
+                );
+
+
+              if(qr){
+
+                qr.innerHTML =
+                  '<img src="' +
+                  qrURL +
+                  '" style="width:100%;height:100%;display:block">';
+
+              }
+
+            }
+
+          }
+
+      }
+    );
+
+
+  const out =
+    document.createElement(
+      "canvas"
+    );
+
+
+  out.width =
+    OUT_W;
+
+  out.height =
+    OUT_H;
+
+
+  const ctx =
+    out.getContext("2d");
+
+
+  ctx.imageSmoothingQuality =
+    "high";
+
+
+  ctx.drawImage(
+    raw,
+    0,
+    0,
+    OUT_W,
+    OUT_H
+  );
+
+
+  return out;
+
+}
+
+
+/* ============================================================
+   DOWNLOAD
+============================================================ */
+
+async function offerDownload(
+  filename,
+  blob
+){
+
+  if(_downloads){
+
+    try{
+
+      await _downloads.save({
+        filename,
+        data:blob
+      });
+
+      return true;
+
+    }catch(error){
+
+      if(
+        error &&
+        error.code === "declined"
+      ){
+
+        return false;
+
+      }
+
+      console.error(
+        "downloads.save failed:",
+        error
+      );
+
+    }
+
+  }
+
+
+  try{
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+
+    const a =
+      document.createElement(
+        "a"
+      );
+
+
+    a.download =
+      filename;
+
+    a.href =
+      url;
+
+
+    document.body.appendChild(
+      a
+    );
+
+
+    a.click();
+
+    a.remove();
+
+
+    setTimeout(
+      () =>
+        URL.revokeObjectURL(
+          url
+        ),
+      4000
+    );
+
+
+    return true;
+
+  }catch(error){
+
+    console.error(
+      error
+    );
+
+    alert(
+      "Download failed. Please try again."
+    );
+
+    return false;
+
+  }
+
+}
+
+
+/* ============================================================
+   PNG EXPORT
+============================================================ */
+
+$("png").onclick =
+  async function(){
+
+    const old =
+      this.textContent;
+
+
+    this.textContent =
+      "Generating 4K...";
+
+    this.disabled =
+      true;
+
+
+    try{
+
+      if(
+        !(await finalizeRecord())
+      ){
+
+        throw new Error(
+          "registry"
+        );
+
+      }
+
+
+      const front =
+        await cardCanvas(
+          $("frontCard")
+        );
+
+
+      const back =
+        await cardCanvas(
+          $("backCard")
+        );
+
+
+      const base =
+        $("pressId")
+          .value
+          .trim();
+
+
+      const frontBlob =
+        await new Promise(
+          resolve =>
+            front.toBlob(
+              resolve,
+              "image/png"
+            )
+        );
+
+
+      const backBlob =
+        await new Promise(
+          resolve =>
+            back.toBlob(
+              resolve,
+              "image/png"
+            )
+        );
+
+
+      await offerDownload(
+        `${base}-FRONT.png`,
+        frontBlob
+      );
+
+
+      setTimeout(
+        () =>
+          offerDownload(
+            `${base}-BACK.png`,
+            backBlob
+          ),
+        350
+      );
+
+
+    }catch(error){
+
+      if(
+        error.message !==
+        "registry"
+      ){
+
+        console.error(
+          error
+        );
+
+        alert(
+          "PNG generation failed. Please try again."
+        );
+
+      }
+
+    }
+
+
+    this.disabled =
+      false;
+
+    this.textContent =
+      old;
+
+  };
+
+
+/* ============================================================
+   PDF EXPORT
+============================================================ */
+
+$("pdf").onclick =
+  async function(){
+
+    const old =
+      this.textContent;
+
+
+    this.textContent =
+      "Generating 4K...";
+
+    this.disabled =
+      true;
+
+
+    try{
+
+      if(
+        !(await finalizeRecord())
+      ){
+
+        throw new Error(
+          "registry"
+        );
+
+      }
+
+
+      const front =
+        await cardCanvas(
+          $("frontCard"),
+          true
+        );
+
+
+      const back =
+        await cardCanvas(
+          $("backCard"),
+          true
+        );
+
+
+      const {
+        jsPDF
+      } =
+        window.jspdf;
+
+
+      const cardW =
+        53.98;
+
+      const cardH =
+        85.60;
+
+
+      const pdf =
+        new jsPDF(
+          {
+            orientation:"portrait",
+            unit:"mm",
+            format:[
+              cardW,
+              cardH
+            ],
+            compress:true
+          }
+        );
+
+
+      pdf.addImage(
+        front.toDataURL(
+          "image/png"
+        ),
+        "PNG",
+        0,
+        0,
+        cardW,
+        cardH,
+        undefined,
+        "FAST"
+      );
+
+
+      pdf.addPage(
+        [
+          cardW,
+          cardH
+        ],
+        "portrait"
+      );
+
+
+      pdf.addImage(
+        back.toDataURL(
+          "image/png"
+        ),
+        "PNG",
+        0,
+        0,
+        cardW,
+        cardH,
+        undefined,
+        "FAST"
+      );
+
+
+      await offerDownload(
+        `${
+          $("pressId")
+            .value
+            .trim()
+        }-FRONT-BACK.pdf`,
+        pdf.output("blob")
+      );
+
+
+    }catch(error){
+
+      if(
+        error.message !==
+        "registry"
+      ){
+
+        console.error(
+          error
+        );
+
+        alert(
+          "PDF generation failed. Please try again."
+        );
+
+      }
+
+    }
+
+
+    this.disabled =
+      false;
+
+    this.textContent =
+      old;
+
+  };
+
+
+/* ============================================================
+   LOAD SAVED DATA
+============================================================ */
+
+function load(){
+
+  try{
+
+    const raw =
+      localStorage.getItem(
+        KEY
+      );
+
+
+    /*
+     * IMPORTANT:
+     *
+     * No saved record means:
+     * DO NOT GENERATE.
+     */
+
+    if(!raw){
+
+      idGenerated =
+        false;
+
+      generationLocked =
+        false;
+
+      verifyCode =
+        null;
+
+
+      $("pressId").value =
+        "LOCKED — COMPLETE BASIC DETAILS";
+
+
+      applyPhoto();
+
+      update();
+
+      return;
+
+    }
+
+
+    const d =
+      JSON.parse(raw);
+
+
+    $("fullName").value =
+      d.fullName || "";
+
+
+    $("position").value =
+      d.position || "";
+
+
+    $("department").value =
+      d.department || "";
+
+
+    $("validFrom").value =
+      d.validFrom || "";
+
+
+    $("validUntil").value =
+      d.validUntil || "";
+
+
+    $("verificationBase").value =
+      (
+        !d.verificationBase ||
+        d.verificationBase ===
+        "https://verify.jourknowsph.org/"
+      )
+      ?
+      "https://jourknows-verify-press-id.vercel.app/"
+      :
+      d.verificationBase;
+
+
+    photoData =
+      d.photoData || null;
+
+
+    photoPos =
+      d.photoPos ||
+      {
+        x:50,
+        y:50
+      };
+
+
+    /*
+     * Only restore a generated ID if BOTH
+     * Press ID and verification code exist.
+     */
+
+    if(
+      d.pressId &&
+      d.verifyCode &&
+      d.idGenerated
+    ){
+
+      $("pressId").value =
+        d.pressId;
+
+      verifyCode =
+        d.verifyCode;
+
+      idGenerated =
+        true;
+
+      generationLocked =
+        true;
+
+      $("pressId").readOnly =
+        true;
+
+
+    }else{
+
+      $("pressId").value =
+        "LOCKED — COMPLETE BASIC DETAILS";
+
+      verifyCode =
+        null;
+
+      idGenerated =
+        false;
+
+      generationLocked =
+        false;
+
+      $("pressId").readOnly =
+        true;
+
+    }
+
+
+    duplicateFlag =
+      Boolean(
+        d.duplicateFlag
+      );
+
+
+    duplicateReason =
+      d.duplicateReason ||
+      "";
+
+
+    if(duplicateFlag){
+
+      $("duplicateWarning")
+        .classList
+        .add("show");
+
+      $("duplicateWarning").textContent =
+        "Duplicate entry: " +
+        duplicateReason;
+
+    }
+
+
+    applyPhoto();
+
+    update();
+
+
+  }catch(error){
+
+    console.error(
+      "Failed to load saved draft:",
+      error
+    );
+
+
+    idGenerated =
+      false;
+
+    generationLocked =
+      false;
+
+    verifyCode =
+      null;
+
+
+    $("pressId").value =
+      "LOCKED — COMPLETE BASIC DETAILS";
+
+
+    applyPhoto();
+
+    update();
+
+  }
+
+}
+
+
+/* ============================================================
+   RESIZE
+============================================================ */
+
+window.addEventListener(
+  "resize",
+  fitName
+);
+
+
+document.fonts.ready.then(
+  fitName
+);
+
+
+/* ============================================================
+   INITIALIZATION
+============================================================ */
+
+(async function init(){
+
+  try{
+
+    if(
+      window.claude &&
+      window.claude.use
+    ){
+
+      _downloads =
+        await window.claude.use(
+          "downloads"
+        );
+
+    }
+
+  }catch(error){
+
+    console.error(
+      "Optional capability initialization failed:",
+      error
+    );
+
+  }
+
+
+  /*
+   * CRITICAL:
+   *
+   * load() only restores an existing record.
+   * It NEVER generates a Press ID.
+   */
+
+  load();
+
+})();
+</script>
+
+</body>
+</html>
+```
