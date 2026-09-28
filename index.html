@@ -122,7 +122,7 @@ body{background:#fff}
   <div class="field">
     <label for="fullName">Full Name</label>
     <input id="fullName" type="text" placeholder="e.g. Paolo Emmanuel Blanco">
-    <div style="font-size:10px;color:#667085;margin-top:5px">The card displays first name + last name only.</div>
+    <div style="font-size:10px;color:#667085;margin-top:5px">The card and the verification page display first name + last name only.</div>
   </div>
   <div class="field">
     <label for="position">Position / Role</label>
@@ -165,7 +165,8 @@ body{background:#fff}
   </div>
   <div class="field">
     <label for="verificationBase">Verification Page</label>
-    <input id="verificationBase" type="url" value="https://verify.jourknowsph.org/">
+    <input id="verificationBase" type="url" value="https://jourknows-verify-press-id.vercel.app/">
+    <div style="font-size:10px;color:#667085;margin-top:5px">Set this to the address where your verify page is deployed (currently your Vercel site). It is printed into every QR code, so set it before exporting cards.</div>
   </div>
 
   <div class="actions">
@@ -180,8 +181,9 @@ body{background:#fff}
   <div class="notice">
     <strong>Portrait card size:</strong> 53.98 × 85.60 mm (CR80 portrait). Exports are 2422 × 3840 px (4K).
     Draft information is saved locally in this browser. Clicking "Generate" reserves a Press ID and verification code
-    together in a shared registry so the same pair is never issued to two people. Use "Export Registry" to pull all
-    reserved codes as JSON for the public verification site.
+    together in a shared registry so the same pair is never issued to two people. A card is added to the public
+    registry when you download or print it, along with its name, role, desk, validity dates and a small photo thumbnail.
+    "Export Registry" downloads <code>data.json</code> with every issued card. Upload it next to the verify page.
   </div>
 </section>
 
@@ -249,6 +251,8 @@ const STAGE_W = 319, STAGE_H = 319 * 85.6 / 53.98; // fixed design size used for
 let photoData = null;
 let photoPos = {x:50,y:50};
 let verifyCode = null;
+let syncTimer = null;
+let thumbCache = {key:null, val:""};
 
 function genVerifyCode(len=10) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -264,6 +268,13 @@ function firstLastName(full) {
   if (!parts.length) return "MEMBER NAME";
   if (parts.length === 1) return parts[0].toUpperCase();
   return `${parts[0]} ${parts[parts.length-1]}`.toUpperCase();
+}
+
+// Name as stored in the public registry: first + last only (same as the card), original casing.
+function nameForRegistry(full) {
+  const parts = (full || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "";
+  return parts.length === 1 ? parts[0] : `${parts[0]} ${parts[parts.length-1]}`;
 }
 
 function nameFontPx(text, cardW) {
@@ -295,7 +306,7 @@ function validity() {
 }
 
 function verificationURL() {
-  let base = $("verificationBase").value.trim() || "https://verify.jourknowsph.org/";
+  let base = $("verificationBase").value.trim() || "https://jourknows-verify-press-id.vercel.app/";
   if (!base.endsWith("/")) base += "/";
   return base + encodeURIComponent(verifyCode || "PENDING000");
 }
@@ -324,6 +335,7 @@ function update() {
   $("photo").style.objectPosition = `${photoPos.x}% ${photoPos.y}%`;
   makeQR();
   save();
+  scheduleSync();
 }
 
 function save() {
@@ -344,6 +356,35 @@ let _downloads = null;
 let _db = null;
 const _sessionHolder = (crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Date.now().toString(36)));
 
+/* ------------------------------------------------------------------
+   Registry: what the public verify page reads (data.json)
+   Each record: pressId, verifyCode, holderName (first + last), position,
+   department, validFrom, validUntil, photo (small JPEG thumbnail),
+   status ("active" | "revoked"), issuedAt, state ("reserved" | "issued").
+   Only "issued" records are exported.
+------------------------------------------------------------------ */
+
+// Crops the member photo exactly like the card does and shrinks it for the registry.
+async function makeThumb() {
+  if (!photoData) return "";
+  const key = photoData.length + ":" + photoData.slice(-64) + ":" + photoPos.x + ":" + photoPos.y;
+  if (thumbCache.key === key) return thumbCache.val;
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = photoData; });
+  const S = 192, c = document.createElement("canvas");
+  c.width = c.height = S;
+  const ctx = c.getContext("2d");
+  const side = Math.min(img.naturalWidth, img.naturalHeight);
+  const sx = (img.naturalWidth - side) * photoPos.x / 100;
+  const sy = (img.naturalHeight - side) * photoPos.y / 100;
+  ctx.imageSmoothingQuality = "high";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, S, S);
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, S, S);
+  const val = c.toDataURL("image/jpeg", 0.72);
+  thumbCache = {key, val};
+  return val;
+}
+
 async function reserveId() {
   if (!_db) {
     return {ok:true, guaranteed:false, pressId:"JK-PRESS-" + Math.floor(100000 + Math.random()*900000), verifyCode:genVerifyCode()};
@@ -357,11 +398,66 @@ async function reserveId() {
       if (!lease.acquired) continue;
       const snap = await ref.get();
       if (snap.exists && snap.data() && snap.data().verifyCode) continue;
-      await ref.set({pressId:candidateId, verifyCode:candidateCode, holderName:($("fullName").value || "").trim(), issuedAt:new Date().toISOString()});
+      await ref.set({pressId:candidateId, verifyCode:candidateCode, holderName:nameForRegistry($("fullName").value), state:"reserved", status:"active", issuedAt:new Date().toISOString()});
       return {ok:true, guaranteed:true, pressId:candidateId, verifyCode:candidateCode};
     } catch(e) { console.error("reserve attempt failed", e); }
   }
   return {ok:false};
+}
+
+// Writes the card's current details to the shared registry.
+// finalize=true marks the card as issued (it will then appear in the export).
+async function syncRecord(finalize = false) {
+  if (!_db) return {ok:false, reason:"no-db"};
+  const id = $("pressId").value.trim();
+  if (!id || !verifyCode) return {ok:false, reason:"incomplete"};
+  const ref = _db.doc("issued/" + id);
+  try {
+    const snap = await ref.get();
+    const prev = (snap.exists && snap.data()) || {};
+    if (prev.verifyCode && prev.verifyCode !== verifyCode) return {ok:false, reason:"taken"};
+    let photo = "";
+    try { photo = await makeThumb(); } catch(e) { console.warn("photo thumbnail failed", e); }
+    const wasIssued = prev.state === "issued" || (!prev.state && prev.holderName);
+    await ref.set({
+      pressId: id,
+      verifyCode,
+      holderName: nameForRegistry($("fullName").value),
+      position: $("position").value.trim(),
+      department: $("department").value,
+      validFrom: $("validFrom").value,
+      validUntil: $("validUntil").value,
+      photo,
+      status: prev.status || "active",
+      state: (finalize || wasIssued) ? "issued" : "reserved",
+      issuedAt: prev.issuedAt || new Date().toISOString()
+    });
+    return {ok:true};
+  } catch(e) {
+    console.error("registry sync failed", e);
+    return {ok:false, reason:"error"};
+  }
+}
+
+function scheduleSync() {
+  if (!_db) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    const r = await syncRecord(false);
+    if (r.ok) $("status").textContent = "● Saved · registry updated";
+  }, 900);
+}
+
+// Called before downloading or printing a card: makes sure the verify page will recognise it.
+async function finalizeRecord() {
+  if (!_db) return true; // no shared registry in this view, nothing to update
+  clearTimeout(syncTimer);
+  if (!$("fullName").value.trim()) { alert("Enter the member's full name first. The verification page shows it when the card is scanned."); return false; }
+  const r = await syncRecord(true);
+  if (r.ok) { $("status").textContent = "● Saved · registry updated"; return true; }
+  if (r.reason === "taken") alert("This Press ID is already registered to someone else. Click Generate to get a new one, then try again.");
+  else alert("Couldn't save this card to the shared registry, so it might not verify when scanned. Please try again.");
+  return false;
 }
 
 async function generateId() {
@@ -408,12 +504,13 @@ function movePhoto(dx,dy) {
   photoPos.y = Math.max(0,Math.min(100,photoPos.y+dy));
   applyPhoto();
   save();
+  scheduleSync();
 }
 $("up").onclick = () => movePhoto(0,-5);
 $("down").onclick = () => movePhoto(0,5);
 $("left").onclick = () => movePhoto(-5,0);
 $("right").onclick = () => movePhoto(5,0);
-$("resetPhoto").onclick = () => { photoPos={x:50,y:50}; applyPhoto(); save(); };
+$("resetPhoto").onclick = () => { photoPos={x:50,y:50}; applyPhoto(); save(); scheduleSync(); };
 
 ["fullName","position","department","pressId","validFrom","validUntil","verificationBase"].forEach(id => {
   $(id).addEventListener("input", update);
@@ -423,11 +520,12 @@ $("resetPhoto").onclick = () => { photoPos={x:50,y:50}; applyPhoto(); save(); };
 $("generateId").onclick = generateId;
 $("save").onclick = () => {
   save();
+  scheduleSync();
   const old = $("save").textContent;
   $("save").textContent = "Saved ✓";
   setTimeout(() => $("save").textContent = old, 1200);
 };
-$("print").onclick = () => window.print();
+$("print").onclick = async () => { if (await finalizeRecord()) window.print(); };
 
 $("exportRegistry").onclick = async function() {
   if (!_db) { alert("The shared registry isn't available in this view, so there's nothing to export from here."); return; }
@@ -435,9 +533,14 @@ $("exportRegistry").onclick = async function() {
   this.textContent = "Exporting...";
   this.disabled = true;
   try {
+    clearTimeout(syncTimer);
+    await syncRecord(false); // make sure the card on screen is up to date first
     const snap = await _db.collection("issued").limit(1000).get();
-    const records = snap.docs.map(d => d.data());
-    await offerDownload("data.json", new Blob([JSON.stringify(records, null, 2)], {type:"application/json"}));
+    const records = snap.docs.map(d => d.data())
+      .filter(r => r.state === "issued" || (!r.state && r.holderName))   // skip unused reservations
+      .map(({state, ...rest}) => rest);
+    if (!records.length) { alert("No issued cards yet. Download or print a card first, then export."); }
+    else await offerDownload("data.json", new Blob([JSON.stringify(records, null, 2)], {type:"application/json"}));
   } catch(e) { alert("Export failed. Please try again."); console.error(e); }
   this.disabled = false;
   this.textContent = old;
@@ -505,6 +608,7 @@ $("png").onclick = async function() {
   this.textContent = "Generating 4K...";
   this.disabled = true;
   try {
+    if (!(await finalizeRecord())) throw new Error("registry");
     const front = await cardCanvas($("frontCard"));
     const back = await cardCanvas($("backCard"));
     const base = $("pressId").value.trim() || "JK-PRESS-ID";
@@ -512,7 +616,7 @@ $("png").onclick = async function() {
     const backBlob = await new Promise(r => back.toBlob(r, "image/png"));
     await offerDownload(`${base}-FRONT.png`, frontBlob);
     setTimeout(() => offerDownload(`${base}-BACK.png`, backBlob), 350);
-  } catch(e) { alert("PNG generation failed. Please try again."); console.error(e); }
+  } catch(e) { if (e.message !== "registry") { alert("PNG generation failed. Please try again."); console.error(e); } }
   this.disabled = false;
   this.textContent = old;
 };
@@ -522,6 +626,7 @@ $("pdf").onclick = async function() {
   this.textContent = "Generating 4K...";
   this.disabled = true;
   try {
+    if (!(await finalizeRecord())) throw new Error("registry");
     const front = await cardCanvas($("frontCard"), true);
     const back = await cardCanvas($("backCard"), true);
     const { jsPDF } = window.jspdf;
@@ -531,7 +636,7 @@ $("pdf").onclick = async function() {
     pdf.addPage([cardW, cardH], "portrait");
     pdf.addImage(back.toDataURL("image/png"), "PNG", 0, 0, cardW, cardH, undefined, "FAST");
     await offerDownload(`${$("pressId").value.trim() || "JK-PRESS-ID"}-FRONT-BACK.pdf`, pdf.output("blob"));
-  } catch(e) { alert("PDF generation failed. Please try again."); console.error(e); }
+  } catch(e) { if (e.message !== "registry") { alert("PDF generation failed. Please try again."); console.error(e); } }
   this.disabled = false;
   this.textContent = old;
 };
@@ -547,7 +652,8 @@ function load() {
     $("pressId").value = d.pressId || "";
     $("validFrom").value = d.validFrom || "";
     $("validUntil").value = d.validUntil || "";
-    $("verificationBase").value = d.verificationBase || "https://verify.jourknowsph.org/";
+    // Drafts saved before the Vercel deploy may still hold the old placeholder domain.
+    $("verificationBase").value = (!d.verificationBase || d.verificationBase === "https://verify.jourknowsph.org/") ? "https://jourknows-verify-press-id.vercel.app/" : d.verificationBase;
     photoData = d.photoData || null;
     photoPos = d.photoPos || {x:50,y:50};
     verifyCode = d.verifyCode || genVerifyCode();
