@@ -175,15 +175,18 @@ body{background:#fff}
     <button class="btn secondary" id="print" type="button">Print</button>
     <button class="btn secondary" id="save" type="button">Save Draft</button>
     <button class="btn secondary full" id="exportRegistry" type="button">Export Registry (JSON)</button>
+    <button class="btn secondary full" id="importRegistry" type="button">Import existing data.json</button>
+    <input id="importFile" type="file" accept="application/json,.json" hidden>
     <button class="btn danger full" id="reset" type="button">Reset Generator</button>
   </div>
 
   <div class="notice">
     <strong>Portrait card size:</strong> 53.98 × 85.60 mm (CR80 portrait). Exports are 2422 × 3840 px (4K).
-    Draft information is saved locally in this browser. Clicking "Generate" reserves a Press ID and verification code
-    together in a shared registry so the same pair is never issued to two people. A card is added to the public
-    registry when you download or print it, along with its name, role, desk, validity dates and a small photo thumbnail.
+    Draft information is saved locally in this browser. Clicking "Generate" reserves a Press ID and verification code.
+    A card is added to the registry when you download or print it, along with its name, role, desk, validity dates and a small
+    photo thumbnail. The registry lives in this browser (or in Claude's shared registry when available).
     "Export Registry" downloads <code>data.json</code> with every issued card. Upload it next to the verify page.
+    Using a new browser or computer? Click "Import existing data.json" first so earlier cards aren't lost.
   </div>
 </section>
 
@@ -385,41 +388,53 @@ async function makeThumb() {
   return val;
 }
 
+// Registry storage: Claude's shared registry when available, otherwise this browser's localStorage.
+const REG_KEY = "jourknows_registry_v1";
+function localReg() { try { return JSON.parse(localStorage.getItem(REG_KEY) || "{}") || {}; } catch(e) { return {}; } }
+async function registryGet(id) {
+  if (_db) { const s = await _db.doc("issued/" + id).get(); return (s.exists && s.data()) || null; }
+  return localReg()[id] || null;
+}
+async function registrySet(id, rec) {
+  if (_db) { await _db.doc("issued/" + id).set(rec); return; }
+  const o = localReg(); o[id] = rec;
+  localStorage.setItem(REG_KEY, JSON.stringify(o));
+}
+async function registryAll() {
+  if (_db) { const s = await _db.collection("issued").limit(1000).get(); return s.docs.map(d => d.data()); }
+  return Object.values(localReg());
+}
+
 async function reserveId() {
-  if (!_db) {
-    return {ok:true, guaranteed:false, pressId:"JK-PRESS-" + Math.floor(100000 + Math.random()*900000), verifyCode:genVerifyCode()};
-  }
   for (let attempts = 0; attempts < 8; attempts++) {
     const candidateId = "JK-PRESS-" + Math.floor(100000 + Math.random()*900000);
     const candidateCode = genVerifyCode();
-    const ref = _db.doc("issued/" + candidateId);
     try {
-      const lease = await ref.acquire({holder:_sessionHolder, ttlMs:8000});
-      if (!lease.acquired) continue;
-      const snap = await ref.get();
-      if (snap.exists && snap.data() && snap.data().verifyCode) continue;
-      await ref.set({pressId:candidateId, verifyCode:candidateCode, holderName:nameForRegistry($("fullName").value), state:"reserved", status:"active", issuedAt:new Date().toISOString()});
-      return {ok:true, guaranteed:true, pressId:candidateId, verifyCode:candidateCode};
+      if (_db) {
+        const lease = await _db.doc("issued/" + candidateId).acquire({holder:_sessionHolder, ttlMs:8000});
+        if (!lease.acquired) continue;
+      } else if (Object.values(localReg()).some(r => r.verifyCode === candidateCode)) continue;
+      const existing = await registryGet(candidateId);
+      if (existing && existing.verifyCode) continue;
+      await registrySet(candidateId, {pressId:candidateId, verifyCode:candidateCode, holderName:nameForRegistry($("fullName").value), state:"reserved", status:"active", issuedAt:new Date().toISOString()});
+      return {ok:true, pressId:candidateId, verifyCode:candidateCode};
     } catch(e) { console.error("reserve attempt failed", e); }
   }
   return {ok:false};
 }
 
-// Writes the card's current details to the shared registry.
+// Writes the card's current details to the registry.
 // finalize=true marks the card as issued (it will then appear in the export).
 async function syncRecord(finalize = false) {
-  if (!_db) return {ok:false, reason:"no-db"};
   const id = $("pressId").value.trim();
   if (!id || !verifyCode) return {ok:false, reason:"incomplete"};
-  const ref = _db.doc("issued/" + id);
   try {
-    const snap = await ref.get();
-    const prev = (snap.exists && snap.data()) || {};
+    const prev = (await registryGet(id)) || {};
     if (prev.verifyCode && prev.verifyCode !== verifyCode) return {ok:false, reason:"taken"};
     let photo = "";
     try { photo = await makeThumb(); } catch(e) { console.warn("photo thumbnail failed", e); }
     const wasIssued = prev.state === "issued" || (!prev.state && prev.holderName);
-    await ref.set({
+    await registrySet(id, {
       pressId: id,
       verifyCode,
       holderName: nameForRegistry($("fullName").value),
@@ -440,7 +455,6 @@ async function syncRecord(finalize = false) {
 }
 
 function scheduleSync() {
-  if (!_db) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
     const r = await syncRecord(false);
@@ -450,13 +464,12 @@ function scheduleSync() {
 
 // Called before downloading or printing a card: makes sure the verify page will recognise it.
 async function finalizeRecord() {
-  if (!_db) return true; // no shared registry in this view, nothing to update
   clearTimeout(syncTimer);
   if (!$("fullName").value.trim()) { alert("Enter the member's full name first. The verification page shows it when the card is scanned."); return false; }
   const r = await syncRecord(true);
   if (r.ok) { $("status").textContent = "● Saved · registry updated"; return true; }
   if (r.reason === "taken") alert("This Press ID is already registered to someone else. Click Generate to get a new one, then try again.");
-  else alert("Couldn't save this card to the shared registry, so it might not verify when scanned. Please try again.");
+  else alert("Couldn't save this card to the registry (browser storage may be full or blocked), so it might not verify when scanned. Please try again.");
   return false;
 }
 
@@ -491,11 +504,27 @@ function applyPhoto() {
   $("photo").style.objectPosition = `${photoPos.x}% ${photoPos.y}%`;
 }
 
+// Keeps very large phone photos from filling browser storage; 1400px is plenty for the 4K card.
+async function shrinkPhoto(url, max = 1400) {
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const big = Math.max(img.naturalWidth, img.naturalHeight);
+    if (big <= max) return url;
+    const k = max / big, c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    const ctx = c.getContext("2d");
+    ctx.imageSmoothingQuality = "high";
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.9);
+  } catch(e) { return url; }
+}
+
 $("photoInput").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => { photoData = ev.target.result; photoPos = {x:50,y:50}; applyPhoto(); update(); };
+  reader.onload = async ev => { photoData = await shrinkPhoto(ev.target.result); photoPos = {x:50,y:50}; applyPhoto(); update(); };
   reader.readAsDataURL(file);
 });
 
@@ -528,15 +557,13 @@ $("save").onclick = () => {
 $("print").onclick = async () => { if (await finalizeRecord()) window.print(); };
 
 $("exportRegistry").onclick = async function() {
-  if (!_db) { alert("The shared registry isn't available in this view, so there's nothing to export from here."); return; }
   const old = this.textContent;
   this.textContent = "Exporting...";
   this.disabled = true;
   try {
     clearTimeout(syncTimer);
     await syncRecord(false); // make sure the card on screen is up to date first
-    const snap = await _db.collection("issued").limit(1000).get();
-    const records = snap.docs.map(d => d.data())
+    const records = (await registryAll())
       .filter(r => r.state === "issued" || (!r.state && r.holderName))   // skip unused reservations
       .map(({state, ...rest}) => rest);
     if (!records.length) { alert("No issued cards yet. Download or print a card first, then export."); }
@@ -545,6 +572,30 @@ $("exportRegistry").onclick = async function() {
   this.disabled = false;
   this.textContent = old;
 };
+
+// Merge an existing data.json (e.g. the one currently on your website) into this browser's registry.
+$("importRegistry").onclick = () => $("importFile").click();
+$("importFile").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const list = JSON.parse(await file.text());
+    if (!Array.isArray(list)) throw new Error("not a list");
+    let added = 0;
+    for (const r of list) {
+      if (!r || !r.pressId || !r.verifyCode) continue;
+      const prev = await registryGet(r.pressId);
+      if (prev && prev.state === "issued") {
+        if (r.status === "revoked" && prev.status !== "revoked") await registrySet(r.pressId, {...prev, status:"revoked"});
+        continue;
+      }
+      await registrySet(r.pressId, {...r, state:"issued", status:r.status || "active"});
+      added++;
+    }
+    alert(`Imported ${added} card${added === 1 ? "" : "s"} from ${file.name}.`);
+  } catch(err) { alert("That file isn't a valid data.json exported from this generator."); console.error(err); }
+});
 
 $("reset").onclick = () => {
   if (!confirm("Reset the current Press ID draft?")) return;
