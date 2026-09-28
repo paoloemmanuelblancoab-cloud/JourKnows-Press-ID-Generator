@@ -145,7 +145,7 @@ input:focus,select:focus{
   background:var(--blue);border-radius:50%
 }
 .branding{
-  position:absolute;top:11%;left:8%;right:8%;display:flex;align-items:center;
+  position:absolute;top:14%;left:8%;right:8%;display:flex;align-items:center;
   justify-content:center;z-index:3
 }
 .branding-logo{
@@ -162,8 +162,8 @@ input:focus,select:focus{
 .branding h3{margin:0;font-size:17px;letter-spacing:1px;font-weight:950}
 .branding p{margin:3px 0 0;font-size:8px;letter-spacing:1.3px;opacity:.8}
 .press-title{
-  position:absolute;right:8%;bottom:14%;z-index:3;text-align:right;
-  font-size:8px;font-weight:900;letter-spacing:1.3px;opacity:.78
+  position:absolute;left:0;right:0;top:19%;z-index:3;text-align:center;
+  font-size:8px;font-weight:900;letter-spacing:1.3px;opacity:.86
 }
 .photo-area{
   position:absolute;z-index:4;top:18.5%;left:50%;transform:translateX(-50%);
@@ -394,7 +394,7 @@ input:focus,select:focus{
       </div>
 
       <div class="actions">
-        <button class="btn primary" id="png" type="button">Download PNG</button>
+        <button class="btn primary" id="png" type="button">Download PNGs</button>
         <button class="btn dark" id="pdf" type="button">Download PDF</button>
         <button class="btn secondary" id="print" type="button">Print</button>
         <button class="btn secondary" id="save" type="button">Save Draft</button>
@@ -781,12 +781,24 @@ $("reset").onclick = () => {
 };
 
 async function cardCanvas(el) {
-  return await html2canvas(el,{
-    scale:4,
-    useCORS:true,
-    backgroundColor:null,
-    logging:false
+  // Render the card itself only. Transparent pixels remain transparent outside
+  // the card artwork, and the output is normalized to 638 × 1012 px, which is
+  // the 300-DPI equivalent of a 53.98 × 85.60 mm portrait CR80 card.
+  const raw = await html2canvas(el, {
+    scale: 4,
+    useCORS: true,
+    backgroundColor: null,
+    logging: false,
+    imageTimeout: 0
   });
+
+  const out = document.createElement("canvas");
+  out.width = 638;
+  out.height = 1012;
+  const ctx = out.getContext("2d");
+  ctx.clearRect(0, 0, out.width, out.height);
+  ctx.drawImage(raw, 0, 0, out.width, out.height);
+  return out;
 }
 
 async function offerDownload(filename, blob) {
@@ -797,16 +809,17 @@ async function offerDownload(filename, blob) {
     } catch(e) {
       if (e && e.code === "declined") return false;
       console.error("downloads.save failed", e);
-      // fall through to legacy anchor as a best-effort fallback
     }
   }
   try {
     const url = URL.createObjectURL(blob);
-    const a=document.createElement("a");
-    a.download=filename;
-    a.href=url;
+    const a = document.createElement("a");
+    a.download = filename;
+    a.href = url;
+    document.body.appendChild(a);
     a.click();
-    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
     return true;
   } catch(e) {
     alert("Download failed. Please try again.");
@@ -816,76 +829,64 @@ async function offerDownload(filename, blob) {
 }
 
 $("png").onclick = async function() {
-  const old=this.textContent;
-  this.textContent="Generating...";
-  this.disabled=true;
+  const old = this.textContent;
+  this.textContent = "Generating...";
+  this.disabled = true;
 
   try {
-    const front=await cardCanvas($("frontCard"));
-    const back=await cardCanvas($("backCard"));
-    const gap=50;
+    const front = await cardCanvas($("frontCard"));
+    const back = await cardCanvas($("backCard"));
+    const base = $("pressId").value.trim() || "JK-PRESS-ID";
 
-    const canvas=document.createElement("canvas");
-    canvas.width=front.width+back.width+gap;
-    canvas.height=Math.max(front.height,back.height);
+    const frontBlob = await new Promise(resolve => front.toBlob(resolve, "image/png"));
+    const backBlob = await new Promise(resolve => back.toBlob(resolve, "image/png"));
 
-    const ctx=canvas.getContext("2d");
-    ctx.fillStyle="#fff";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(front,0,0);
-    ctx.drawImage(back,front.width+gap,0);
-
-    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
-    await offerDownload(`${$("pressId").value || "JK-PRESS-ID"}-portrait.png`, blob);
+    // Separate files preserve the exact portrait card dimensions. There is no
+    // white canvas surrounding either side.
+    await offerDownload(`${base}-FRONT.png`, frontBlob);
+    setTimeout(() => offerDownload(`${base}-BACK.png`, backBlob), 350);
   } catch(e) {
     alert("PNG generation failed. Please try again.");
     console.error(e);
   }
 
-  this.disabled=false;
-  this.textContent=old;
+  this.disabled = false;
+  this.textContent = "Download PNGs";
 };
 
 $("pdf").onclick = async function() {
-  const old=this.textContent;
-  this.textContent="Generating...";
-  this.disabled=true;
+  const old = this.textContent;
+  this.textContent = "Generating...";
+  this.disabled = true;
 
   try {
-    const front=await cardCanvas($("frontCard"));
-    const back=await cardCanvas($("backCard"));
+    const front = await cardCanvas($("frontCard"));
+    const back = await cardCanvas($("backCard"));
+    const { jsPDF } = window.jspdf;
 
-    const {jsPDF}=window.jspdf;
-
-    // A4 portrait sheet with both portrait cards.
-    const pdf=new jsPDF({
-      orientation:"portrait",
-      unit:"mm",
-      format:"a4"
+    // PDF pages are the exact physical card size, not A4/Letter.
+    const cardW = 53.98;
+    const cardH = 85.60;
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [cardW, cardH],
+      compress: true
     });
 
-    const cardW=53.98;
-    const cardH=85.6;
-    const gap=8;
-    const x1=(210-(cardW*2+gap))/2;
-    const y=105-cardH/2;
+    pdf.addImage(front.toDataURL("image/png"), "PNG", 0, 0, cardW, cardH, undefined, "FAST");
+    pdf.addPage([cardW, cardH], "portrait");
+    pdf.addImage(back.toDataURL("image/png"), "PNG", 0, 0, cardW, cardH, undefined, "FAST");
 
-    pdf.addImage(front.toDataURL("image/png"),"PNG",x1,y,cardW,cardH);
-    pdf.addImage(back.toDataURL("image/png"),"PNG",x1+cardW+gap,y,cardW,cardH);
-
-    pdf.setFontSize(7);
-    pdf.setTextColor(120);
-    pdf.text("JourKnows PH Press ID • Front and Back",105,198,{align:"center"});
-
-    const pdfBlob = pdf.output("blob");
-    await offerDownload(`${$("pressId").value || "JK-PRESS-ID"}-portrait.pdf`, pdfBlob);
+    const blob = pdf.output("blob");
+    await offerDownload(`${$("pressId").value.trim() || "JK-PRESS-ID"}-FRONT-BACK.pdf`, blob);
   } catch(e) {
     alert("PDF generation failed. Please try again.");
     console.error(e);
   }
 
-  this.disabled=false;
-  this.textContent=old;
+  this.disabled = false;
+  this.textContent = "Download PDF";
 };
 
 function load() {
